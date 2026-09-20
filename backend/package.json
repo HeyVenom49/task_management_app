@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun src/server.ts",
+    "migrate": "bun src/db/migrate.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.0",
+    "express": "^5.2.1",
+    "postgres": "^3.4.9"
+  }
+}
