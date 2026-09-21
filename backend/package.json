@@ -14,8 +14,10 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "argon2": "^0.45.1",
     "dotenv": "^18.0.0",
     "express": "^5.2.1",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "zod": "^4.6.5"
   }
 }
