@@ -33,14 +33,16 @@ async function migrate() {
 
   // Find all .sql migration files
   const files = await readdir(migrationsDirectory);
-  const migrationFiles = files.filter((file) => file.endsWith(".sql")).sort();
+  const migrationFiles = files
+    .filter((file) => file.endsWith(".sql") && !file.startsWith("._"))
+    .sort();
 
   for (const file of migrationFiles) {
     const match = file.match(/^(\d+)_.*\.sql$/);
 
     if (!match) {
       throw new Error(
-        `Invalid migraion filename: ${file}. Expected from 001_name.sql`,
+        `Invalid migration filename: ${file}. Expected format 001_name.sql`,
       );
     }
 
