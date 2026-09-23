@@ -16,7 +16,7 @@ authRouter.post("/register", (req, res, next) => {
   controller.register(req, res, next);
 });
 
-authRouter.post("/verify-email", (req, res, next) => {
+authRouter.get("/verify-email", (req, res, next) => {
   controller.verifyEmail(req, res, next);
 });
 

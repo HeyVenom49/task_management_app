@@ -37,7 +37,7 @@ export class AuthController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const parsed = verifyEmailSchema.safeParse(req.body);
+      const parsed = verifyEmailSchema.safeParse({ token: req.query.token });
       if (!parsed.success) {
         res.status(400).json({
           message: "Validation failed",
