@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repository";
 import sql from "../../db/client";
 import { EmailVerificationRepository } from "./email-verification.repository";
+import { authenticate } from "../../shared/middleware/authenticate";
 
 const repo = new AuthRepository(sql);
 const emailVerification = new EmailVerificationRepository(sql);
@@ -14,6 +15,14 @@ const authRouter = Router();
 
 authRouter.post("/register", (req, res, next) => {
   controller.register(req, res, next);
+});
+
+authRouter.post("/login", (req, res, next) => {
+  controller.login(req, res, next);
+});
+
+authRouter.get("/me", authenticate, (req, res) => {
+  res.json({ user: req.user });
 });
 
 authRouter.get("/verify-email", (req, res, next) => {

@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import type { RegisterInput } from "./auth.schema";
+import type { LoginInput, RegisterInput } from "./auth.schema";
 import { AuthRepository } from "./auth.repository";
 import { ConflictError } from "../../shared/errors/conflict-error";
 import type { EmailVerificationRepository } from "./email-verification.repository";
@@ -7,9 +7,11 @@ import type { PublicUser } from "./auth.types";
 import { createHash, randomBytes } from "node:crypto";
 import { AppError } from "../../shared/errors/app-error";
 import type { Sql, TransactionSql } from "postgres";
+import { signAccessToken } from "../../shared/auth/token";
 
 type Db = Sql | TransactionSql;
 
+const DUMMY_HASH = await argon2.hash("dummy-password-for-timing");
 export class AuthService {
   constructor(
     private readonly sql: Sql,
@@ -79,6 +81,39 @@ export class AuthService {
       }
       throw err;
     }
+  }
+
+  public async login(
+    input: LoginInput,
+  ): Promise<{ user: PublicUser; accessToken: string }> {
+    const user = await this.repo.findByEmail(input.email);
+    const hashToCheck = user?.hashPassword ?? DUMMY_HASH;
+    const ok = await argon2.verify(hashToCheck, input.password);
+
+    if (!user || !ok) {
+      throw new AppError(401, "Invalid email or password");
+    }
+
+    if (user.status !== "ACTIVE") {
+      throw new AppError(403, "Please verify your email");
+    }
+
+    const accessToken = await signAccessToken({
+      sub: user.id,
+      email: user.email,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        createdAt: user.createdAt,
+      },
+      accessToken,
+    };
   }
 
   public async verifyEmail(rawToken: string): Promise<void> {

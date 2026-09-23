@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import {
+  loginSchema,
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
@@ -26,6 +27,24 @@ export class AuthController {
 
       const result = await this.service.register(parsed.data);
       res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  public async login(req: Request, res: Response, next: NextFunction) {
+    try {
+      const parsed = loginSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        res.status(400).json({
+          message: "Invalid creditials",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const result = await this.service.login(parsed.data);
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
