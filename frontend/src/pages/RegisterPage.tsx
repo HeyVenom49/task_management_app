@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { TextField } from "../components/ui/TextField";
 import { FormBanner } from "../components/ui/FormBanner";
 import { useForm } from "../hooks/useForm";
+import { ApiError } from "../api/client";
 import * as authApi from "../api/auth";
 
 type RegisterValues = { name: string; email: string; password: string };
@@ -23,6 +24,7 @@ const validators = {
 export function RegisterPage() {
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
+  const [resendError, setResendError] = useState<string | null>(null);
 
   const { values, errors, formError, isSubmitting, handleChange, handleBlur, handleSubmit } =
     useForm<RegisterValues>({
@@ -37,8 +39,18 @@ export function RegisterPage() {
   async function handleResend() {
     if (!registeredEmail) return;
     setResendState("sending");
-    await authApi.resendVerification(registeredEmail);
-    setResendState("sent");
+    setResendError(null);
+    try {
+      await authApi.resendVerification(registeredEmail);
+      setResendState("sent");
+    } catch (err) {
+      setResendState("idle");
+      if (err instanceof ApiError) {
+        setResendError(err.message);
+      } else {
+        setResendError("Something went wrong. Please try again.");
+      }
+    }
   }
 
   if (registeredEmail) {
@@ -47,6 +59,7 @@ export function RegisterPage() {
         <FormBanner variant="success">
           We sent a verification link to {registeredEmail}. Click it to activate your account.
         </FormBanner>
+        {resendError && <FormBanner variant="error">{resendError}</FormBanner>}
         <Button
           variant="text"
           type="button"

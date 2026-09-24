@@ -63,4 +63,37 @@ describe("RegisterPage", () => {
     expect(screen.getByText("Name must be at least 3 characters")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  test("shows an error and returns to clickable state when resend verification fails", async () => {
+    let callCount = 0;
+    globalThis.fetch = mock(async (url: string) => {
+      callCount++;
+      // First call: registration succeeds
+      if (callCount === 1) {
+        return jsonResponse(201, { user: { id: "1", name: "Ana", email: "ana@example.com", role: "USER", status: "INACTIVE", createdAt: "2026-01-01T00:00:00Z" } });
+      }
+      // Second call: resend verification fails
+      return jsonResponse(500, { message: "Server error" });
+    }) as unknown as typeof fetch;
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>,
+    );
+    fillAndSubmit();
+
+    // Wait for check-your-email panel
+    await waitFor(() => expect(screen.getByText(/We sent a verification link to ana@example.com/)).toBeInTheDocument());
+
+    // Click resend button
+    const resendButton = screen.getByRole("button", { name: "Resend email" });
+    fireEvent.click(resendButton);
+
+    // Wait for error message to appear
+    await waitFor(() => expect(screen.getByText("Server error")).toBeInTheDocument());
+
+    // Verify button is no longer disabled (returned to clickable state)
+    expect(resendButton).not.toHaveAttribute("disabled");
+  });
 });
