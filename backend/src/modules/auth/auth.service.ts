@@ -66,6 +66,24 @@ export class AuthService {
     return rawToken;
   }
 
+  private async issuePasswordResetToken(
+    userId: string,
+    db: Db = this.sql,
+  ): Promise<string> {
+    await this.passwordResetRepo.invalidateUserTokens(userId, db);
+
+    const rawToken = randomBytes(32).toString("base64url");
+    const tokenHash = this.hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.passwordResetRepo.createToken(
+      { userId, tokenHash, expiresAt },
+      db,
+    );
+
+    return rawToken;
+  }
+
   public async register(input: RegisterInput): Promise<{ user: PublicUser }> {
     await this.findByEmail(input.email);
 
@@ -174,9 +192,15 @@ export class AuthService {
     const hash = this.hashToken(rawRefreshToken);
     const session = await this.sessionRepo.findByTokenHash(hash);
 
-    if (!session || session.revokedAt || session.expiresAt < new Date()) {
+    if (!session || session.expiresAt < new Date()) {
       throw new UnauthorizedError("Invalid refresh token");
     }
+
+    if (session.revokedAt) {
+      await this.sessionRepo.revokeAllForUser(session.userId);
+      throw new UnauthorizedError("Invalid refresh token");
+    }
+
     const user = await this.repo.findById(session.userId);
     if (!user || user.status !== "ACTIVE") {
       throw new UnauthorizedError("Invalid refresh token");
@@ -240,7 +264,7 @@ export class AuthService {
 
     if (!user || user.status !== "ACTIVE") return;
 
-    const rawToken = await this.issueVerificationToken(user.id);
+    const rawToken = await this.issuePasswordResetToken(user.id);
     if (env.nodeEnv !== "production") {
       console.log(`Password reset token for ${user.email}: ${rawToken}`);
     }

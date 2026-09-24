@@ -7,6 +7,7 @@ import { EmailVerificationRepository } from "./email-verification.repository";
 import { authenticate } from "../../shared/middleware/authenticate";
 import { SessionRepository } from "./session.repository";
 import { PasswordResetRepository } from "./password-reset.repository";
+import { authWriteLimiter, loginLimiter } from "../../shared/auth/rate-limit";
 
 const repo = new AuthRepository(sql);
 const emailVerification = new EmailVerificationRepository(sql);
@@ -27,7 +28,7 @@ authRouter.post("/register", (req, res, next) => {
   controller.register(req, res, next);
 });
 
-authRouter.post("/login", (req, res, next) => {
+authRouter.post("/login", loginLimiter, (req, res, next) => {
   controller.login(req, res, next);
 });
 
@@ -47,7 +48,7 @@ authRouter.get("/verify-email", (req, res, next) => {
   controller.verifyEmail(req, res, next);
 });
 
-authRouter.post("/resend-verification", (req, res, next) => {
+authRouter.post("/resend-verification", authWriteLimiter, (req, res, next) => {
   controller.resendVerification(req, res, next);
 });
 
@@ -55,7 +56,7 @@ authRouter.post("/change-password", authenticate, (req, res, next) => {
   controller.changePassword(req, res, next);
 });
 
-authRouter.post("/forgot-password", (req, res, next) => {
+authRouter.post("/forgot-password", authWriteLimiter, (req, res, next) => {
   controller.forgotPassword(req, res, next);
 });
 

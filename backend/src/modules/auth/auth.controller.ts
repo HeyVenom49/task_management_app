@@ -12,9 +12,8 @@ import type { AuthService } from "./auth.service";
 import {
   clearRefreshToken,
   readRefreshToken,
-  setRefreshCookie,
+  sendAuthTokens,
 } from "../../shared/auth/refresh-cookie";
-import { errors } from "jose";
 
 export class AuthController {
   constructor(private readonly service: AuthService) {}
@@ -53,8 +52,7 @@ export class AuthController {
         return;
       }
       const result = await this.service.login(parsed.data);
-      setRefreshCookie(res, result.refreshToken);
-      res.status(200).json(result);
+      sendAuthTokens(req, res, result, 200);
     } catch (err) {
       next(err);
     }
@@ -120,8 +118,7 @@ export class AuthController {
         return;
       }
       const result = await this.service.refresh(raw);
-      setRefreshCookie(res, result.refreshToken);
-      res.status(200).json(result);
+      sendAuthTokens(req, res, result, 200);
     } catch (err) {
       next(err);
     }
