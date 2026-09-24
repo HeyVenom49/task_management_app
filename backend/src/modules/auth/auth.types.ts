@@ -40,3 +40,23 @@ export type VerificationTokenRecord = {
   usedAt: Date | null;
   createdAt: Date;
 };
+
+export type CreateSessionInput = {
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+};
+
+export type SessionRecord = {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  createdAt: Date;
+};
+
+export type CreateOpaqueTokenInput = {
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+};

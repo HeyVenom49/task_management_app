@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import { AppError } from "../errors/app-error";
 import { verifyAccessToken } from "../auth/token";
+import { UnauthorizedError } from "../errors";
 
 export async function authenticate(
   req: Request,
@@ -9,13 +9,13 @@ export async function authenticate(
 ): Promise<void> {
   try {
     const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer")) {
-      throw new AppError(401, "Unauthorized");
+    if (!header?.startsWith("Bearer ")) {
+      throw new UnauthorizedError();
     }
 
     const token = header.slice("Bearer ".length).trim();
     if (!token) {
-      throw new AppError(401, "Unauthorized");
+      throw new UnauthorizedError();
     }
 
     const payload = await verifyAccessToken(token);
@@ -23,6 +23,6 @@ export async function authenticate(
 
     next();
   } catch {
-    next(new AppError(401, "Unauthorized"));
+    next(new UnauthorizedError());
   }
 }
