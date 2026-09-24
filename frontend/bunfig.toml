@@ -1,2 +1,13 @@
 [test]
 preload = ["./test/setup.ts"]
+# This project lives on an external/network volume that periodically
+# generates macOS AppleDouble sidecar files (e.g. "._LoginPage.test.tsx").
+# Bun's test-file glob would otherwise match these too and fail trying to
+# parse their binary content. Excluding them here (at glob-resolution time,
+# before any file is opened/parsed) closes the gap that test/setup.ts's
+# runtime cleanup can't: on the very first `bun test` run after such a file
+# appears, setup.ts's preload-time deletion runs AFTER Bun has already
+# resolved its list of test files, so it can still surface one isolated,
+# non-cascading "ENOENT" error for that file. This pattern excludes it from
+# discovery entirely, so it never appears at all, on any run.
+pathIgnorePatterns = ["**/._*"]
