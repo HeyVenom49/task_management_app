@@ -1,0 +1,66 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform var(--duration-micro) var(--ease-out),
+    background-color var(--duration-micro) var(--ease-out);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.text {
+  background: transparent;
+  color: var(--accent);
+  height: auto;
+  padding: var(--space-1) 0;
+}
+
+.label {
+  transition: opacity 100ms var(--ease-out);
+}
+
+.button[aria-busy="true"] .label {
+  opacity: 0;
+}
+
+.spinnerSlot {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 100ms var(--ease-out);
+}
+
+.button[aria-busy="true"] .spinnerSlot {
+  opacity: 1;
+}
