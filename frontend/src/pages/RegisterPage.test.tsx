@@ -16,7 +16,7 @@ function fillAndSubmit() {
   fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Ana" } });
   fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ana@example.com" } });
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
-  fireEvent.click(screen.getByText("Create account"));
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 }
 
 describe("RegisterPage", () => {
@@ -45,7 +45,7 @@ describe("RegisterPage", () => {
     );
     fillAndSubmit();
 
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Email already registered"));
+    await waitFor(() => expect(screen.getByText("Email already registered")).toHaveAttribute("role", "alert"));
   });
 
   test("shows a client-side validation error without calling the API for a short name", () => {
@@ -58,7 +58,7 @@ describe("RegisterPage", () => {
       </MemoryRouter>,
     );
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Al" } });
-    fireEvent.click(screen.getByText("Create account"));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(screen.getByText("Name must be at least 3 characters")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
