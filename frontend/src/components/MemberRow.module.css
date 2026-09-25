@@ -1,0 +1,32 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.identity {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.email {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.role {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}

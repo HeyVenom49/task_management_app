@@ -1,0 +1,22 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.inviteForm {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  max-width: 420px;
+}
+
+.inviteForm > :first-child {
+  flex: 1;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
