@@ -182,8 +182,8 @@ See the design doc above for full reasoning. Key ones worth remembering:
 [x] PROJECT_MAP.md created
 [ ] Product model / UX architecture sign-off
 [ ] Design language (Phase 4)
-[ ] Application shell + routing
-[ ] Auth flow (register/verify/login/refresh/logout/password reset+change)
+[x] Application shell + routing
+[x] Auth flow (register/verify/login/refresh/logout/password reset+change)
 [ ] Post-login dashboard (blocked — needs projects API)
 [ ] Projects workflow (blocked — needs backend module)
 [ ] Tasks workflow (blocked — needs backend module)
@@ -222,3 +222,24 @@ See the design doc above for full reasoning. Key ones worth remembering:
 
 - Backend reconnaissance (auth module, schema, middleware, env, CORS/cookie behavior).
 - This project map.
+- **2026-09-25 — Auth frontend implementation complete (Tasks 1–18 of the plan).** Built the
+  full auth-only frontend against the backend's `/api/v1/auth` surface (see §4):
+  design tokens (typography/color/spacing/radius/motion, §12); the shared `useForm` hook and
+  `apiFetch` client; `AuthContext`/session bootstrap with silent refresh-on-load and in-memory
+  access token; route guards (redirect unauthenticated users to `/login`, redirect authenticated
+  users away from auth screens); `AppShell` navigation; and every screen in §8 — Register,
+  VerifyEmail, Login, ForgotPassword, ResetPassword, an honest placeholder Dashboard (no
+  fabricated projects/tasks content, per §15), and SecuritySettings (change password, which logs
+  the user out per backend behavior). Logout is wired through `AuthContext`. All work verified
+  via Task 18's final integration pass: `bun test` (56 pass / 0 fail / 0 errors across 20 files),
+  `bun run build` (`tsc -b && vite build`, zero errors), `bun run lint` (zero errors), and a
+  `TODO`/`FIXME` sweep of `src/` (no matches).
+  Plan: `docs/superpowers/plans/2026-09-24-auth-frontend.md`.
+  Spec: `docs/superpowers/specs/2026-09-24-auth-frontend-design.md`.
+- **Pending:** Task 18 Step 4 (manual smoke test walking register → verify-email → login →
+  change-password → logout → forgot/reset-password against a real running backend, plus a
+  `prefers-reduced-motion` check) was **not** run in this pass — no backend instance, database,
+  or credentials were available in this environment. This step still needs to be run by hand
+  against a real backend (Postgres + Express, per `backend/src/config/env.ts`) before the auth
+  feature is considered fully verified end-to-end. See Task 18's brief and report for the exact
+  walkthrough steps.
