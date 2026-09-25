@@ -83,7 +83,7 @@ describe("ProjectMembersPage", () => {
     await waitFor(() => expect(screen.getByText("User not found or not verified")).toBeInTheDocument());
   });
 
-  test("shows the backend's message when removing the last owner", async () => {
+  test("shows the backend's message when removing the last owner, visibly inside the still-open confirm dialog", async () => {
     removeMemberMock.mockImplementation(async () => {
       throw new ApiError(400, "Cannot remove the last owner");
     });
@@ -98,6 +98,10 @@ describe("ProjectMembersPage", () => {
     const dialog = screen.getByRole("alertdialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "Remove" }));
 
-    await waitFor(() => expect(screen.getByText("Cannot remove the last owner")).toBeInTheDocument());
+    // The error must render *inside* the still-open dialog (where it's actually visible to the
+    // user, above the overlay) rather than in the page's background flow, where ConfirmDialog's
+    // fixed, full-viewport overlay would cover it.
+    await waitFor(() => expect(within(dialog).getByText(/Cannot remove the last owner/)).toBeInTheDocument());
+    expect(screen.getByRole("alertdialog")).toBe(dialog);
   });
 });

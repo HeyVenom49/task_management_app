@@ -68,8 +68,6 @@ export function ProjectMembersPage() {
         </form>
       )}
 
-      {removeError && <FormBanner variant="error">{removeError}</FormBanner>}
-
       <div className={styles.list}>
         {members.map((member) => (
           <MemberRow
@@ -85,7 +83,11 @@ export function ProjectMembersPage() {
       {removeTarget && (
         <ConfirmDialog
           title="Remove member?"
-          description={`${removeTarget.name} will lose access to this project.`}
+          description={
+            removeError
+              ? `${removeTarget.name} will lose access to this project. ${removeError}.`
+              : `${removeTarget.name} will lose access to this project.`
+          }
           confirmLabel="Remove"
           isConfirming={isRemoving}
           onConfirm={() => void confirmRemove()}
