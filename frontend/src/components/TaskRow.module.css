@@ -1,0 +1,38 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-micro) var(--ease-out);
+}
+
+.row:hover {
+  background: rgba(23, 23, 26, 0.02);
+}
+
+.title {
+  flex: 1;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assignee {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  min-width: 96px;
+}
+
+.updatedAt {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
