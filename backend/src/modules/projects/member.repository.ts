@@ -47,7 +47,7 @@ export class MemberRepository {
 
   public async create(
     input: CreateMemberInput,
-    db: Sql = this.sql,
+    db: Db = this.sql,
   ): Promise<Member> {
     const status = input.status ?? "ACTIVE";
     const [row] = await db`
@@ -126,5 +126,22 @@ export class MemberRepository {
         RETURNING id
     `;
     return result.length > 0;
+  }
+
+  public async reactivate(
+    memberId: string,
+    role: "OWNER" | "MEMBER" = "MEMBER",
+    db: Db = this.sql,
+  ) {
+    const [row] = await db`
+      UPDATE members
+      SET 
+        status = 'ACTIVE',
+        role = ${role},
+        updated_at = NOW()
+      WHERE id = ${memberId} AND status = 'INACTIVE'
+      RETURNING id, user_id, project_id, role, status, created_at, updated_at
+    `;
+    return row ? this.map(row as MemberRow) : null;
   }
 }

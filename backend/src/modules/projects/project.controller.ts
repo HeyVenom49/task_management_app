@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import {
+  addMemberSchema,
   createProjectSchema,
+  memberParamsSchema,
   projectIdParamsSchema,
   updateProjectSchema,
 } from "./project.schema";
@@ -111,13 +113,122 @@ export class ProjectController {
       const params = projectIdParamsSchema.safeParse(req.params);
       if (!params.success) {
         res.status(400).json({
-          message: "Validaton failed",
+          message: "Validation failed",
           errors: params.error.flatten().fieldErrors,
         });
         return;
       }
       await this.service.remove(req.user.id, params.data.id);
       res.status(200).json({ message: "Project deleted" });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  public async listMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const params = projectIdParamsSchema.safeParse(req.params);
+      if (!params.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: params.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const result = await this.service.listMember(req.user.id, params.data.id);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  public async addMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const params = projectIdParamsSchema.safeParse(req.params);
+      if (!params.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: params.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const parsed = addMemberSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const result = await this.service.addMember(
+        req.user.id,
+        params.data.id,
+        parsed.data.email,
+      );
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  public async removeMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const params = memberParamsSchema.safeParse(req.params);
+      if (!params.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: params.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      await this.service.removeMember(
+        req.user.id,
+        params.data.id,
+        params.data.memberId,
+      );
+      res.status(200).json({ message: "Member removed" });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  public async reactivateMember(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const params = memberParamsSchema.safeParse(req.params);
+      if (!params.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: params.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const result = await this.service.reactivateMember(
+        req.user.id,
+        params.data.id,
+        params.data.memberId,
+      );
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
