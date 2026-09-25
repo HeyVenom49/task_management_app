@@ -118,7 +118,7 @@ export class TaskRepository {
             updated_at = NOW()
         WHERE id = ${taskId}
         RETURNING
-            id, project_id, creator_member_id, assingnee_member_id, title, description, priority, status, created_at, updated_at
+            id, project_id, creator_member_id, assignee_member_id, title, description, priority, status, created_at, updated_at
     `;
 
     return row ? this.map(row as TaskRow) : null;
