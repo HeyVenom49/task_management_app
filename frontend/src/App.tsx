@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider } from "./auth/AuthContext";
 import { RequireAuth } from "./auth/RequireAuth";
 import { RequireGuest } from "./auth/RequireGuest";
@@ -8,6 +8,10 @@ import { LoginPage } from "./pages/LoginPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { ProjectPage } from "./pages/ProjectPage";
+import { ProjectTasksPage } from "./pages/ProjectTasksPage";
+import { ProjectMembersPage } from "./pages/ProjectMembersPage";
+import { ProjectSettingsPage } from "./pages/ProjectSettingsPage";
 import { SecuritySettingsPage } from "./pages/SecuritySettingsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
@@ -57,6 +61,19 @@ function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/projects/:id"
+            element={
+              <RequireAuth>
+                <ProjectPage />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to="tasks" replace />} />
+            <Route path="tasks" element={<ProjectTasksPage />} />
+            <Route path="members" element={<ProjectMembersPage />} />
+            <Route path="settings" element={<ProjectSettingsPage />} />
+          </Route>
           <Route
             path="/settings/security"
             element={

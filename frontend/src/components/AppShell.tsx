@@ -10,7 +10,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell}>
       <header className={styles.topBar}>
-        <span className={styles.wordmark}>docket</span>
+        <Link to="/" className={styles.wordmark}>
+          docket
+        </Link>
         <nav className={styles.nav}>
           <Link to="/settings/security">Security</Link>
           <span className={styles.user}>{user?.email}</span>
