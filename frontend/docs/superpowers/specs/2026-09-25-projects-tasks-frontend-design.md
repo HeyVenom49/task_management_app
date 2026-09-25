@@ -29,10 +29,16 @@ to match this spec once implementation lands (per CLAUDE.md §1D: source code ou
 | GET | `/:id/members` | — | 200 `{ members }` | ACTIVE members only, joined with `name`/`email` |
 | POST | `/:id/members` | `{ email }` | 201 `{ member }` | OWNER only; target user must exist & be ACTIVE; new member role is always `MEMBER` |
 | DELETE | `/:id/members/:memberId` | — | 200 `{ message }` | OWNER only; soft-deactivates (status → INACTIVE); blocked if target is the last active OWNER |
-| POST | `/:id/members/:memberId/reactivate` | — | 200 `{ member }` | **platform ADMIN only** (`req.user`'s `users.role`, not project role); reactivates an INACTIVE member back to `MEMBER` |
+| POST | `/:id/members/:memberId/reactivate` | — | 200 `{ member }` | **platform ADMIN only**; reactivates an INACTIVE member back to `MEMBER` — **no frontend path reaches this in v1, see note below** |
 
 A project has **no `name` field** — only `info` (free text, ≤500 chars). There is no dedicated
 "list all projects" admin endpoint — `GET /projects` is always scoped to the caller's memberships.
+
+**Reactivate is unreachable from the UI, by design of this pass (not an oversight):**
+`MemberRepository.listByProjectId` filters `WHERE ... AND m.status = 'ACTIVE'`
+(`member.repository.ts:101`) — no endpoint ever returns INACTIVE members, so there is no id for
+the frontend to call `reactivate` with. §2, §4, and §5 below reflect this: no reactivate UI, no
+`reactivateMember` API function, in this pass. See §9.
 
 ### Tasks — `/api/v1/projects/:id/tasks` (all routes require `authenticate`)
 
@@ -70,7 +76,6 @@ existing `apiFetch`/`useForm` pipeline already parses.
 |---|---|---|
 | Edit project info, delete project | project OWNER | Settings tab not rendered for MEMBER |
 | Invite / remove member | project OWNER | invite form / remove action not rendered for MEMBER |
-| Reactivate a removed member | platform ADMIN | reactivate action only rendered when `user.role === "ADMIN"`, only on INACTIVE rows |
 | Create / edit task, change its status or assignee | any ACTIVE project member | always available inside a project the user is a member of |
 | Delete task | task's creator, or project OWNER | delete action hidden on rows where `task.creatorMemberId !== viewer's membership.id` unless viewer is OWNER |
 
@@ -112,7 +117,7 @@ deleteProject(id: string): Promise<{ message: string }>
 listMembers(projectId: string): Promise<{ members: MemberWithUser[] }>
 addMember(projectId: string, email: string): Promise<{ member: Member }>
 removeMember(projectId: string, memberId: string): Promise<{ message: string }>
-reactivateMember(projectId: string, memberId: string): Promise<{ member: Member }>
+// no reactivateMember — no frontend-reachable id to call it with, see §1
 
 // api/tasks.ts
 listTasks(projectId: string): Promise<{ tasks: Task[] }>
@@ -146,8 +151,9 @@ pages/
                              excerpt as title, your-role badge, tab nav), outlet for nested tab
                              routes; handles the project-level loading/403-as-404/not-found states
   ProjectTasksPage.tsx      dense task list, status/priority filter, "New task" → TaskDrawer
-  ProjectMembersPage.tsx    member list (name, email, role, status), invite form (owner),
-                             remove/reactivate actions per §2
+  ProjectMembersPage.tsx    member list (name, email, role), invite form (owner), remove
+                             action (owner) per §2 — inactive/removed members are not listed
+                             by the backend, so they simply disappear from this view (§1)
   ProjectSettingsPage.tsx   owner-only — edit info form, delete-project (ConfirmDialog)
 
 components/
@@ -220,5 +226,11 @@ end-to-end verified, the same caveat the auth spec closed with.
   fetch-on-mount is correct for what exists today.
 - A persistent project-switcher sidebar (Approach A considered during brainstorming, deferred —
   revisit if a user's project count grows enough that the dashboard-list pattern stops scaling).
-- Admin-wide project/member management outside the per-project reactivate action (no such backend
-  endpoint exists — `GET /projects` is always scoped to the caller's own memberships).
+- Admin-wide project/member management (no such backend endpoint exists — `GET /projects` is
+  always scoped to the caller's own memberships).
+- Reactivating a removed member — `POST /:id/members/:memberId/reactivate` exists and is
+  ADMIN-gated on the backend, but `GET /:id/members` only ever returns ACTIVE members
+  (`member.repository.ts:101`), so there is no frontend-reachable id to call it with. Not built
+  in this pass; would need a backend change (e.g. an admin-only "list inactive members" query or
+  an `includeInactive` flag) to become buildable, which is out of scope here per CLAUDE.md §4 (no
+  backend changes beyond the one-line typo fix already agreed).
