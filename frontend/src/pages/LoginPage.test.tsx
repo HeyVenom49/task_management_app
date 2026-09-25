@@ -99,7 +99,9 @@ describe("LoginPage", () => {
     const resendButton = screen.getByRole("button", { name: "Resend verification email" });
     fireEvent.click(resendButton);
 
-    await waitFor(() => expect(screen.getByText("Server error")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Something went wrong. Please try again.")).toBeInTheDocument(),
+    );
     expect(resendButton).not.toHaveAttribute("disabled");
   });
 

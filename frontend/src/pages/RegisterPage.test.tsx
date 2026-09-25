@@ -92,7 +92,9 @@ describe("RegisterPage", () => {
     fireEvent.click(resendButton);
 
     // Wait for error message to appear
-    await waitFor(() => expect(screen.getByText("Server error")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Something went wrong. Please try again.")).toBeInTheDocument(),
+    );
 
     // Verify button is no longer disabled (returned to clickable state)
     expect(resendButton).not.toHaveAttribute("disabled");

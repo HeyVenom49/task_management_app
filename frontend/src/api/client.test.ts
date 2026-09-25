@@ -50,6 +50,17 @@ describe("apiFetch", () => {
     });
   });
 
+  test("throws a generic ApiError for a 500 response, ignoring the body's message", async () => {
+    globalThis.fetch = mock(async () =>
+      jsonResponse(500, { message: "Server error" }),
+    ) as unknown as typeof fetch;
+
+    await expect(apiFetch("/auth/me")).rejects.toMatchObject({
+      status: 500,
+      message: "Something went wrong. Please try again.",
+    });
+  });
+
   test("throws a generic ApiError when fetch itself rejects (network failure)", async () => {
     globalThis.fetch = mock(async () => {
       throw new TypeError("Failed to fetch");
@@ -90,6 +101,37 @@ describe("apiFetch", () => {
     await expect(apiFetch("/auth/me")).rejects.toBeInstanceOf(ApiError);
     expect(called).toBe(true);
     expect(getAccessToken()).toBeNull();
+  });
+
+  test("de-duplicates concurrent refreshes: two concurrent 401s trigger only one /auth/refresh call", async () => {
+    setAccessToken("expired-token");
+    let refreshCalls = 0;
+    let meCalls = 0;
+    const fetchMock = mock(async (url: string) => {
+      if (url.includes("/auth/refresh")) {
+        refreshCalls++;
+        return jsonResponse(200, { accessToken: "new-token" });
+      }
+      if (url.includes("/auth/me")) {
+        meCalls++;
+        // The first two calls are the original (pre-refresh) attempts; later calls are retries.
+        if (meCalls <= 2) {
+          return jsonResponse(401, { message: "Unauthorized" });
+        }
+        return jsonResponse(200, { user: { id: "1" } });
+      }
+      throw new Error(`Unexpected URL in test: ${url}`);
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const [a, b] = await Promise.all([
+      apiFetch<{ user: { id: string } }>("/auth/me"),
+      apiFetch<{ user: { id: string } }>("/auth/me"),
+    ]);
+
+    expect(a.user.id).toBe("1");
+    expect(b.user.id).toBe("1");
+    expect(refreshCalls).toBe(1);
   });
 
   test("never retries a 401 from /auth/login itself", async () => {

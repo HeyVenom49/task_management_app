@@ -63,21 +63,32 @@ async function rawRequest<T>(path: string, options: ApiFetchOptions, token: stri
   const data = (text ? JSON.parse(text) : {}) as ErrorBody & Record<string, unknown>;
 
   if (!response.ok) {
-    throw new ApiError(response.status, data.message ?? GENERIC_ERROR_MESSAGE, data.errors);
+    const message = response.status >= 500 ? GENERIC_ERROR_MESSAGE : (data.message ?? GENERIC_ERROR_MESSAGE);
+    throw new ApiError(response.status, message, data.errors);
   }
 
   return data as T;
 }
 
+let refreshInFlight: Promise<boolean> | null = null;
+
 async function refreshAccessToken(): Promise<boolean> {
-  try {
-    const data = await rawRequest<{ accessToken: string }>("/auth/refresh", { method: "POST" }, null);
-    accessToken = data.accessToken;
-    return true;
-  } catch {
-    accessToken = null;
-    return false;
+  if (refreshInFlight) {
+    return refreshInFlight;
   }
+  refreshInFlight = (async () => {
+    try {
+      const data = await rawRequest<{ accessToken: string }>("/auth/refresh", { method: "POST" }, null);
+      accessToken = data.accessToken;
+      return true;
+    } catch {
+      accessToken = null;
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
