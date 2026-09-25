@@ -105,6 +105,26 @@ describe("LoginPage", () => {
     expect(resendButton).not.toHaveAttribute("disabled");
   });
 
+  test("shows a success banner when arriving with a message in navigation state", async () => {
+    globalThis.fetch = mock(async () => jsonResponse(401, { message: "Unauthorized" })) as unknown as typeof fetch; // boot refresh
+
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: "/login", state: { message: "Password updated. Please log in again." } }]}
+      >
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Password updated. Please log in again.")).toBeInTheDocument(),
+    );
+  });
+
   test("shows a client-side validation error without calling the API for an invalid email", () => {
     const fetchMock = mock(async () => jsonResponse(401, { message: "Unauthorized" }));
     globalThis.fetch = fetchMock as unknown as typeof fetch;

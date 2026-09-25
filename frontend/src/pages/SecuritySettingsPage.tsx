@@ -30,7 +30,7 @@ export function SecuritySettingsPage() {
       onSubmit: async (formValues) => {
         await authApi.changePassword(formValues);
         clearSession();
-        navigate("/login", { replace: true });
+        navigate("/login", { replace: true, state: { message: "Password updated. Please log in again." } });
       },
     });
 

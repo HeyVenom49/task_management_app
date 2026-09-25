@@ -1,6 +1,6 @@
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 
 const realAuthContext = { ...(await import("../auth/AuthContext")) };
 const clearSessionMock = mock(() => {});
@@ -58,6 +58,35 @@ describe("SecuritySettingsPage", () => {
 
     await waitFor(() => expect(screen.getByText("login page")).toBeInTheDocument());
     expect(clearSessionMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("navigates to /login with a success message in navigation state after a successful change", async () => {
+    globalThis.fetch = mock(async () =>
+      jsonResponse(200, { message: "Password updated. Please log in again." }),
+    ) as unknown as typeof fetch;
+
+    function LoginStateProbe() {
+      const location = useLocation();
+      const state = location.state as { message?: string } | null;
+      return <p>{state?.message ?? "no message"}</p>;
+    }
+
+    render(
+      <MemoryRouter initialEntries={["/settings/security"]}>
+        <Routes>
+          <Route path="/settings/security" element={<SecuritySettingsPage />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Current password"), { target: { value: "old-password" } });
+    fireEvent.change(screen.getByLabelText("New password"), { target: { value: "new-password1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update password" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Password updated. Please log in again.")).toBeInTheDocument(),
+    );
   });
 
   test("shows the backend's error message on a wrong current password", async () => {

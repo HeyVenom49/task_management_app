@@ -25,7 +25,8 @@ export function LoginPage() {
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
   const [resendError, setResendError] = useState<string | null>(null);
 
-  const from = (location.state as { from?: string } | null)?.from ?? "/";
+  const from = (location.state as { from?: string; message?: string } | null)?.from ?? "/";
+  const successMessage = (location.state as { from?: string; message?: string } | null)?.message;
 
   const { values, errors, formError, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm<LoginValues>({
     initialValues: { email: "", password: "" },
@@ -65,6 +66,7 @@ export function LoginPage() {
   return (
     <AuthLayout title="Welcome back" helper={<Link to="/register">Need an account? Create one</Link>}>
       <form onSubmit={handleSubmit} noValidate>
+        {successMessage && <FormBanner variant="success">{successMessage}</FormBanner>}
         {needsVerification && (
           <FormBanner variant="error">
             Please verify your email before signing in.{" "}
