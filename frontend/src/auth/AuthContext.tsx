@@ -67,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async logout() {
         try {
           await authApi.logout();
+        } catch {
+          // Ignored — the local session is cleared unconditionally below regardless of network outcome.
         } finally {
           clearSession();
         }

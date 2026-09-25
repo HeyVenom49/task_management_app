@@ -68,6 +68,16 @@ describe("auth API layer", () => {
     expect(getAccessToken()).toBeNull();
   });
 
+  test("logout clears the local access token even when the network call fails", async () => {
+    setAccessToken("abc123");
+    globalThis.fetch = mock(async () =>
+      jsonResponse(500, { message: "Internal error" }),
+    ) as unknown as typeof fetch;
+
+    await expect(authApi.logout()).rejects.toBeTruthy();
+    expect(getAccessToken()).toBeNull();
+  });
+
   test("verifyEmail URL-encodes the token into the query string", async () => {
     const fetchMock = mock(async (url: string) => {
       expect(url).toContain("/auth/verify-email?token=abc%20123");

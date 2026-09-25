@@ -31,9 +31,11 @@ export async function refresh(): Promise<RefreshResponse> {
 }
 
 export async function logout(): Promise<MessageResponse> {
-  const result = await apiFetch<MessageResponse>("/auth/logout", { method: "POST" });
-  setAccessToken(null);
-  return result;
+  try {
+    return await apiFetch<MessageResponse>("/auth/logout", { method: "POST" });
+  } finally {
+    setAccessToken(null);
+  }
 }
 
 export function verifyEmail(token: string): Promise<MessageResponse> {
