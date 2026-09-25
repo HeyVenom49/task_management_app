@@ -1,0 +1,30 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.NOT_STARTED {
+  background: rgba(138, 138, 144, 0.14);
+  color: var(--text-secondary);
+}
+
+.IN_PROGRESS {
+  background: rgba(54, 84, 166, 0.14);
+  color: var(--info);
+}
+
+.BLOCKED {
+  background: rgba(180, 83, 9, 0.14);
+  color: var(--warning);
+}
+
+.COMPLETED {
+  background: rgba(21, 128, 61, 0.14);
+  color: var(--success);
+}

@@ -1,0 +1,35 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.VERY_LOW {
+  background: rgba(138, 138, 144, 0.08);
+  color: var(--text-muted);
+}
+
+.LOW {
+  background: rgba(138, 138, 144, 0.16);
+  color: var(--text-secondary);
+}
+
+.MODERATE {
+  background: rgba(180, 83, 9, 0.12);
+  color: var(--warning);
+}
+
+.HIGH {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--danger);
+}
+
+.URGENT {
+  background: var(--danger);
+  color: var(--accent-contrast);
+}
