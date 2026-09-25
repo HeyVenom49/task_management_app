@@ -79,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- useAuth is the paired consumer hook for this file's AuthProvider; splitting it out would require updating every import site for a Fast-Refresh-only concern, not a runtime issue.
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {

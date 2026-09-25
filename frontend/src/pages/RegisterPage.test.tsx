@@ -66,7 +66,8 @@ describe("RegisterPage", () => {
 
   test("shows an error and returns to clickable state when resend verification fails", async () => {
     let callCount = 0;
-    globalThis.fetch = mock(async (url: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- URL parameter not used in this mock fetch handler
+    globalThis.fetch = mock(async (_url: string) => {
       callCount++;
       // First call: registration succeeds
       if (callCount === 1) {
