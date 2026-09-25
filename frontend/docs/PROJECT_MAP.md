@@ -180,8 +180,8 @@ See the design doc above for full reasoning. Key ones worth remembering:
 [x] Backend reconnaissance
 [x] API map (auth only — projects/tasks have no API yet)
 [x] PROJECT_MAP.md created
-[ ] Product model / UX architecture sign-off
-[ ] Design language (Phase 4)
+[x] Product model / UX architecture sign-off
+[x] Design language (Phase 4)
 [x] Application shell + routing
 [x] Auth flow (register/verify/login/refresh/logout/password reset+change)
 [ ] Post-login dashboard (blocked — needs projects API)
