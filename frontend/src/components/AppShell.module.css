@@ -22,11 +22,16 @@
   align-items: center;
   gap: var(--space-4);
   font-size: var(--text-sm);
+  flex-wrap: wrap;
 }
 
 .user {
   font-family: var(--font-mono);
   color: var(--text-secondary);
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .content {
