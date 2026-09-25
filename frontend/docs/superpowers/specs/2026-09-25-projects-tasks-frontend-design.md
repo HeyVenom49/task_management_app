@@ -179,8 +179,13 @@ Extends the existing token set (`src/styles/tokens.css`) — no new colors beyon
 priority ramp; no new spacing/radius/shadow values.
 
 - **Dashboard:** a dense single-column list, not a card grid (CLAUDE.md flags repetitive-cards as
-  a default to avoid). Each row: `info` truncated to ~2 lines, role badge, member count, created
-  date, trailing chevron. Same density posture as the auth screens' information hierarchy.
+  a default to avoid). Each row: `info` truncated to ~2 lines, created date, trailing chevron,
+  plus a "Created by you" indicator when `project.creatorId === user.id`. No role badge or member
+  count here — `GET /projects` (`findForMember`, `project.repository.ts:87-96`) returns only
+  `{ id, creatorId, info, createdAt, updatedAt }`; showing role/count would mean either inventing
+  data or firing a members-list request per project just to render a list, which nothing in the
+  product justifies. Role badge and member count belong on the project detail header (§ below),
+  where the membership list is already being fetched anyway.
 - **Project header:** `info` text doubles as the page title (no separate name field exists) —
   first ~60 chars styled as heading, full text revealed on hover/expand. Role badge next to it.
   Tab nav below uses flat 1px borders (no pill tabs, no sliding underline) — consistent with
