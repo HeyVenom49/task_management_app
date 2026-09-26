@@ -13,11 +13,12 @@ import styles from "./ProjectSettingsPage.module.css";
 type InfoFormValues = { info: string };
 
 export function ProjectSettingsPage() {
-  const { project, membership } = useOutletContext<ProjectOutletContext>();
+  const { project, membership, refreshProject } = useOutletContext<ProjectOutletContext>();
   const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const { values, errors, formError, isSubmitting, handleChange, handleBlur, handleSubmit } =
     useForm<InfoFormValues>({
@@ -31,9 +32,17 @@ export function ProjectSettingsPage() {
               : undefined,
       },
       async onSubmit(formValues) {
+        setSaveSuccess(false);
         await updateProject(project.id, formValues.info.trim());
+        await refreshProject();
+        setSaveSuccess(true);
       },
     });
+
+  function handleInfoChange(value: string): void {
+    setSaveSuccess(false);
+    handleChange("info", value);
+  }
 
   async function handleDeleteProject(): Promise<void> {
     setIsDeleting(true);
@@ -56,11 +65,12 @@ export function ProjectSettingsPage() {
     <div className={styles.page}>
       <form onSubmit={handleSubmit} className={styles.form}>
         {formError && <FormBanner variant="error">{formError}</FormBanner>}
+        {!formError && saveSuccess && <FormBanner variant="success">Project info saved.</FormBanner>}
         <TextArea
           label="Project info"
           value={values.info}
           error={errors.info}
-          onChange={(event) => handleChange("info", event.target.value)}
+          onChange={(event) => handleInfoChange(event.target.value)}
           onBlur={() => handleBlur("info")}
         />
         <Button type="submit" variant="primary" isLoading={isSubmitting}>

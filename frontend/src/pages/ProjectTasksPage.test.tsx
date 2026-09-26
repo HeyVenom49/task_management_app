@@ -30,6 +30,7 @@ const baseContext: ProjectOutletContext = {
   ],
   membership: { id: "m1", userId: "u1", projectId: "p1", role: "OWNER", status: "ACTIVE", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z", name: "Ana", email: "ana@example.com" },
   refreshMembers: mock(async () => {}),
+  refreshProject: mock(async () => {}),
 };
 
 function renderTasksPage(context: ProjectOutletContext = baseContext) {

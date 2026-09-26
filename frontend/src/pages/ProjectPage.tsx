@@ -17,6 +17,7 @@ export type ProjectOutletContext = {
   members: MemberWithUser[];
   membership: MemberWithUser;
   refreshMembers: () => Promise<void>;
+  refreshProject: () => Promise<void>;
 };
 
 type LoadState = "loading" | "loaded" | "not-found" | "error";
@@ -95,6 +96,12 @@ export function ProjectPage() {
     setMembers(result.members);
   }
 
+  async function refreshProject(): Promise<void> {
+    if (!id) return;
+    const result = await getProject(id);
+    setProject(result.project);
+  }
+
   if (state === "loading") {
     return <Spinner label="Loading project" fullPage />;
   }
@@ -127,12 +134,14 @@ export function ProjectPage() {
     tabs.push({ to: `/projects/${project.id}/settings`, label: "Settings" });
   }
 
-  const context: ProjectOutletContext = { project, members, membership, refreshMembers };
+  const context: ProjectOutletContext = { project, members, membership, refreshMembers, refreshProject };
 
   return (
     <AppShell>
       <header className={styles.header}>
-        <h1 className={styles.title}>{project.info}</h1>
+        <h1 className={styles.title} title={project.info}>
+          {project.info}
+        </h1>
         <span className={styles.roleBadge}>{membership.role === "OWNER" ? "Owner" : "Member"}</span>
         <span className={styles.memberCount}>
           {members.length} {members.length === 1 ? "member" : "members"}

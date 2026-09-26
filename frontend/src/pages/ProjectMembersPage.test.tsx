@@ -47,6 +47,7 @@ describe("ProjectMembersPage", () => {
       members: [owner, member],
       membership: owner,
       refreshMembers,
+      refreshProject: mock(async () => {}),
     });
 
     expect(screen.getByLabelText("Invite by email")).toBeInTheDocument();
@@ -60,6 +61,7 @@ describe("ProjectMembersPage", () => {
       members: [owner, member],
       membership: member,
       refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
     });
 
     expect(screen.queryByLabelText("Invite by email")).not.toBeInTheDocument();
@@ -75,6 +77,7 @@ describe("ProjectMembersPage", () => {
       members: [owner],
       membership: owner,
       refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
     });
 
     fireEvent.change(screen.getByLabelText("Invite by email"), { target: { value: "unknown@example.com" } });
@@ -92,6 +95,7 @@ describe("ProjectMembersPage", () => {
       members: [owner, member],
       membership: owner,
       refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));

@@ -53,6 +53,15 @@ describe("ProjectPage", () => {
     expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
   });
 
+  test("exposes the full project info as the heading's title attribute, for text truncated by CSS", async () => {
+    const longInfo =
+      "A very long project description that goes well beyond what the truncated heading can show on screen, so members without settings access can still read it in full via the native tooltip.";
+    getProjectMock.mockImplementation(async () => ({ project: { ...defaultProject, info: longInfo } }));
+    renderProjectPage();
+    const heading = await screen.findByRole("heading", { level: 1 });
+    await waitFor(() => expect(heading).toHaveAttribute("title", longInfo));
+  });
+
   test("hides the Settings tab for a MEMBER", async () => {
     listMembersMock.mockImplementation(async () => ({
       members: [{ ...ownerMembership, role: "MEMBER" as const }],

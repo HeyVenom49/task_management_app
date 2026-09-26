@@ -43,19 +43,53 @@ afterEach(() => {
 
 describe("ProjectSettingsPage", () => {
   test("redirects a MEMBER to the tasks tab instead of showing the form", async () => {
-    renderSettingsPage({ project, members: [owner, member], membership: member, refreshMembers: mock(async () => {}) });
+    renderSettingsPage({
+      project,
+      members: [owner, member],
+      membership: member,
+      refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
+    });
     await waitFor(() => expect(screen.getByText("tasks tab")).toBeInTheDocument());
   });
 
   test("an OWNER can submit the info form", async () => {
-    renderSettingsPage({ project, members: [owner], membership: owner, refreshMembers: mock(async () => {}) });
+    renderSettingsPage({
+      project,
+      members: [owner],
+      membership: owner,
+      refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
+    });
     fireEvent.change(screen.getByLabelText("Project info"), { target: { value: "Updated plan" } });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(() => expect(updateProjectMock).toHaveBeenCalledWith("p1", "Updated plan"));
   });
 
+  test("a successful save refreshes the project and shows a success banner", async () => {
+    const refreshProject = mock(async () => {});
+    renderSettingsPage({
+      project,
+      members: [owner],
+      membership: owner,
+      refreshMembers: mock(async () => {}),
+      refreshProject,
+    });
+    fireEvent.change(screen.getByLabelText("Project info"), { target: { value: "Updated plan" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(refreshProject).toHaveBeenCalled());
+    expect(await screen.findByText("Project info saved.")).toBeInTheDocument();
+  });
+
   test("confirming delete calls deleteProject", async () => {
-    renderSettingsPage({ project, members: [owner], membership: owner, refreshMembers: mock(async () => {}) });
+    renderSettingsPage({
+      project,
+      members: [owner],
+      membership: owner,
+      refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
+    });
     fireEvent.click(screen.getByRole("button", { name: "Delete project" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(deleteProjectMock).toHaveBeenCalledWith("p1"));
@@ -65,7 +99,13 @@ describe("ProjectSettingsPage", () => {
     deleteProjectMock.mockImplementation(async () => {
       throw new ApiError(500, "Something went wrong while deleting the project");
     });
-    renderSettingsPage({ project, members: [owner], membership: owner, refreshMembers: mock(async () => {}) });
+    renderSettingsPage({
+      project,
+      members: [owner],
+      membership: owner,
+      refreshMembers: mock(async () => {}),
+      refreshProject: mock(async () => {}),
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Delete project" }));
     const dialog = screen.getByRole("alertdialog");
