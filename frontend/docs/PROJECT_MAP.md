@@ -351,8 +351,15 @@ See the design doc above for full reasoning. Key ones worth remembering:
   scaling.
 - **Admin-wide project/member management** — no such backend endpoint exists; `GET /projects` is
   always scoped to the caller's own memberships.
-- Responsive refinement and accessibility audit as standalone passes (built with intentional
-  responsive/accessible patterns throughout, but not separately audited end-to-end — §14).
+- **No responsive breakpoints in the projects/tasks feature's stylesheets** — none of the new
+  CSS modules (project list, tabs, task list, drawer, dialogs, etc.) contain a `@media` query
+  other than `prefers-reduced-motion`. The task list and other dense screens will squeeze or
+  overflow at phone widths; a real responsive pass (breakpoints, not just fluid units) is next.
+- **`ConfirmDialog` and `TaskDrawer` declare modal ARIA roles without modal keyboard behavior** —
+  both render `role="dialog"`/`"alertdialog"` with `aria-modal="true"`, but neither implements
+  Escape-to-close, a focus trap while open, or focus-restore to the trigger on close. As shipped
+  this is a worse-than-nothing signal to assistive tech: it claims the background is inert while
+  keyboard focus can still reach it. Needs a standalone accessibility pass.
 
 ## 18. Completed Work
 
