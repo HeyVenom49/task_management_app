@@ -131,7 +131,7 @@ export function ProjectTasksPage() {
       </div>
 
       {tasks.length === 0 ? (
-        <p className={styles.empty}>No tasks yet — create the first one to get started.</p>
+        <p className={styles.empty}>No tasks yet — add the first one and this project starts moving.</p>
       ) : filteredTasks.length === 0 ? (
         <p className={styles.empty}>No tasks match these filters.</p>
       ) : (

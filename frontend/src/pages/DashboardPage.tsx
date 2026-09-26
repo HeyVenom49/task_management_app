@@ -122,8 +122,8 @@ export function DashboardPage() {
 
       {state === "loaded" && projects.length === 0 && (
         <div className={styles.empty}>
-          <p>You don't have any projects yet.</p>
-          <p className={styles.detail}>Create one to start tracking tasks with your team.</p>
+          <p>No projects yet</p>
+          <p className={styles.detail}>Start with one quiet place for your team’s work. You can invite people after you create it.</p>
         </div>
       )}
 

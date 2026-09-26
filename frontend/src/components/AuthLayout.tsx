@@ -10,12 +10,23 @@ type AuthLayoutProps = {
 export function AuthLayout({ title, helper, children }: AuthLayoutProps) {
   return (
     <div className={styles.page}>
-      <div className={styles.wordmark}>docket</div>
-      <div className={styles.card}>
-        <h1 className={styles.title}>{title}</h1>
-        {children}
+      <aside className={styles.brand}>
+        <div className={styles.brandInner}>
+          <div className={styles.wordmark}>docket</div>
+          <p className={styles.tagline}>
+            Your calm desk for projects that get busy.
+          </p>
+        </div>
+        <div className={styles.brandGlow} aria-hidden="true" />
+      </aside>
+
+      <div className={styles.panel}>
+        <div className={styles.card}>
+          <h1 className={styles.title}>{title}</h1>
+          {children}
+          {helper && <p className={styles.helper}>{helper}</p>}
+        </div>
       </div>
-      {helper && <p className={styles.helper}>{helper}</p>}
     </div>
   );
 }

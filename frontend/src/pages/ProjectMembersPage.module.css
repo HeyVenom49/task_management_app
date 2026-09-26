@@ -4,19 +4,57 @@
   gap: var(--space-6);
 }
 
-.inviteForm {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  max-width: 420px;
+.invitePanel {
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
-.inviteForm > :first-child {
+.inviteTitle {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.inviteHint {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.inviteForm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 480px;
+}
+
+.inviteForm .inviteField {
   flex: 1;
+  margin-bottom: 0;
+}
+
+/* Sit beside the input, under the label (label line-height + field gap). */
+.inviteButton {
+  margin-top: calc(var(--text-sm) * 1.5 + var(--space-1));
+  height: 42px;
+  flex-shrink: 0;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.sectionLabel {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
 }

@@ -52,32 +52,40 @@ export function ProjectMembersPage() {
   return (
     <div className={styles.page}>
       {isOwner && (
-        <form onSubmit={handleSubmit} className={styles.inviteForm}>
+        <div className={styles.invitePanel}>
+          <h2 className={styles.inviteTitle}>Invite someone</h2>
+          <p className={styles.inviteHint}>They’ll join as a member once their account exists.</p>
           {formError && <FormBanner variant="error">{formError}</FormBanner>}
-          <TextField
-            label="Invite by email"
-            type="email"
-            value={values.email}
-            error={errors.email}
-            onChange={(event) => handleChange("email", event.target.value)}
-            onBlur={() => handleBlur("email")}
-          />
-          <Button type="submit" variant="primary" isLoading={isSubmitting}>
-            Invite
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className={styles.inviteForm}>
+            <TextField
+              className={styles.inviteField}
+              label="Email"
+              type="email"
+              value={values.email}
+              error={errors.email}
+              onChange={(event) => handleChange("email", event.target.value)}
+              onBlur={() => handleBlur("email")}
+            />
+            <Button type="submit" variant="primary" isLoading={isSubmitting} className={styles.inviteButton}>
+              Invite
+            </Button>
+          </form>
+        </div>
       )}
 
-      <div className={styles.list}>
-        {members.map((member) => (
-          <MemberRow
-            key={member.id}
-            member={member}
-            canRemove={isOwner && member.id !== membership.id}
-            isRemoving={isRemoving && removeTarget?.id === member.id}
-            onRemove={() => setRemoveTarget(member)}
-          />
-        ))}
+      <div>
+        <p className={styles.sectionLabel}>People on this project</p>
+        <div className={styles.list}>
+          {members.map((member) => (
+            <MemberRow
+              key={member.id}
+              member={member}
+              canRemove={isOwner && member.id !== membership.id}
+              isRemoving={isRemoving && removeTarget?.id === member.id}
+              onRemove={() => setRemoveTarget(member)}
+            />
+          ))}
+        </div>
       </div>
 
       {removeTarget && (

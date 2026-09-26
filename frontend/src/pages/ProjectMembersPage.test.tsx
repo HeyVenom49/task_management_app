@@ -50,7 +50,7 @@ describe("ProjectMembersPage", () => {
       refreshProject: mock(async () => {}),
     });
 
-    expect(screen.getByLabelText("Invite by email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
     const removeButtons = screen.getAllByRole("button", { name: "Remove" });
     expect(removeButtons).toHaveLength(1); // only Bo's row, not Ana's (the viewer)
   });
@@ -64,7 +64,7 @@ describe("ProjectMembersPage", () => {
       refreshProject: mock(async () => {}),
     });
 
-    expect(screen.queryByLabelText("Invite by email")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
   });
 
@@ -80,7 +80,7 @@ describe("ProjectMembersPage", () => {
       refreshProject: mock(async () => {}),
     });
 
-    fireEvent.change(screen.getByLabelText("Invite by email"), { target: { value: "unknown@example.com" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "unknown@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Invite" }));
 
     await waitFor(() => expect(screen.getByText("User not found or not verified")).toBeInTheDocument());

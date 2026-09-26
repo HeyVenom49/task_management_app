@@ -50,6 +50,24 @@ describe("auth API layer", () => {
     expect(getAccessToken()).toBe("new-token");
   });
 
+  test("de-duplicates concurrent refresh calls into a single /auth/refresh request", async () => {
+    let refreshCalls = 0;
+    globalThis.fetch = mock(async (url: string) => {
+      if (url.includes("/auth/refresh")) {
+        refreshCalls++;
+        await new Promise((r) => setTimeout(r, 20));
+        return jsonResponse(200, { accessToken: "shared-token" });
+      }
+      throw new Error(`Unexpected URL in test: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const [a, b] = await Promise.all([authApi.refresh(), authApi.refresh()]);
+    expect(a.accessToken).toBe("shared-token");
+    expect(b.accessToken).toBe("shared-token");
+    expect(getAccessToken()).toBe("shared-token");
+    expect(refreshCalls).toBe(1);
+  });
+
   test("logout clears the local access token", async () => {
     setAccessToken("abc123");
     globalThis.fetch = mock(async () => jsonResponse(200, { message: "Logged out" })) as unknown as typeof fetch;

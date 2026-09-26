@@ -16,7 +16,9 @@ export function MemberRow({ member, canRemove, isRemoving, onRemove }: MemberRow
         <span className={styles.name}>{member.name}</span>
         <span className={styles.email}>{member.email}</span>
       </div>
-      <span className={styles.role}>{member.role === "OWNER" ? "Owner" : "Member"}</span>
+      <span className={`${styles.role} ${member.role === "OWNER" ? styles.roleOwner : ""}`}>
+        {member.role === "OWNER" ? "Owner" : "Member"}
+      </span>
       {canRemove && (
         <Button variant="secondary" isLoading={isRemoving} onClick={onRemove}>
           Remove

@@ -7,7 +7,7 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
 };
 
-export function TextField({ label, error, id, type = "text", ...rest }: TextFieldProps) {
+export function TextField({ label, error, id, type = "text", className, ...rest }: TextFieldProps) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const errorId = `${fieldId}-error`;
@@ -16,7 +16,7 @@ export function TextField({ label, error, id, type = "text", ...rest }: TextFiel
   const inputType = isPassword && revealed ? "text" : type;
 
   return (
-    <div className={styles.field}>
+    <div className={[styles.field, className].filter(Boolean).join(" ")}>
       <label htmlFor={fieldId} className={styles.label}>
         {label}
       </label>

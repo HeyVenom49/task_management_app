@@ -3,19 +3,26 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+
+.row:last-child {
+  border-bottom: none;
 }
 
 .identity {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .name {
   font-size: var(--text-base);
+  font-weight: 500;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
 }
 
@@ -26,7 +33,15 @@
 }
 
 .role {
-  font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-inset);
+}
+
+.roleOwner {
+  color: var(--accent-hover);
+  background: var(--accent-soft);
 }

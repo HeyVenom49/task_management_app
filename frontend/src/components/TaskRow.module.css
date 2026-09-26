@@ -4,21 +4,28 @@
   gap: var(--space-3);
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
   text-align: left;
   cursor: pointer;
   transition: background-color var(--duration-micro) var(--ease-out);
 }
 
+.row:last-child {
+  border-bottom: none;
+}
+
 .row:hover {
-  background: rgba(23, 23, 26, 0.02);
+  background: var(--surface-raised);
 }
 
 .title {
   flex: 1;
   font-size: var(--text-base);
+  font-weight: 500;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;

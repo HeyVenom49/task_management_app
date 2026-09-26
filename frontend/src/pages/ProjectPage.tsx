@@ -147,9 +147,11 @@ export function ProjectPage() {
           {members.length} {members.length === 1 ? "member" : "members"}
         </span>
       </header>
-      <Tabs items={tabs} />
-      <div className={styles.tabContent}>
-        <Outlet context={context} />
+      <div className={styles.panel}>
+        <Tabs items={tabs} />
+        <div className={styles.tabContent}>
+          <Outlet context={context} />
+        </div>
       </div>
     </AppShell>
   );

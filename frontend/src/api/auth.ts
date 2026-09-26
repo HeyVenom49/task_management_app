@@ -1,4 +1,4 @@
-import { apiFetch, setAccessToken } from "./client";
+import { ApiError, apiFetch, refreshSession, setAccessToken } from "./client";
 import type {
   ChangePasswordInput,
   LoginInput,
@@ -25,8 +25,10 @@ export function me(): Promise<MeResponse> {
 }
 
 export async function refresh(): Promise<RefreshResponse> {
-  const result = await apiFetch<RefreshResponse>("/auth/refresh", { method: "POST" });
-  setAccessToken(result.accessToken);
+  const result = await refreshSession();
+  if (!result) {
+    throw new ApiError(401, "Unauthorized");
+  }
   return result;
 }
 

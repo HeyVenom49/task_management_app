@@ -48,7 +48,7 @@ afterEach(() => {
 describe("DashboardPage", () => {
   test("shows an honest empty state when the user has no projects", async () => {
     renderDashboard();
-    await waitFor(() => expect(screen.getByText("You don't have any projects yet.")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("No projects yet")).toBeInTheDocument());
   });
 
   test("lists projects and marks the ones the user created", async () => {
@@ -70,7 +70,7 @@ describe("DashboardPage", () => {
       membership: { id: "m1", userId: "u1", projectId: "p3", role: "OWNER", status: "ACTIVE", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
     }));
     renderDashboard();
-    await waitFor(() => expect(screen.getByText("You don't have any projects yet.")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("No projects yet")).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "New project" }));
     fireEvent.change(screen.getByLabelText("What's this project about?"), { target: { value: "Brand new project" } });

@@ -105,87 +105,121 @@ export function TaskDrawer({
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
-        <h2 id={titleId} className={styles.heading}>
-          {task ? "Edit task" : "New task"}
-        </h2>
-        {(formError || deleteError) && <FormBanner variant="error">{formError ?? deleteError}</FormBanner>}
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <TextField
-            label="Title"
-            value={values.title}
-            error={errors.title}
-            onChange={(event) => handleChange("title", event.target.value)}
-            onBlur={() => handleBlur("title")}
-          />
-          <TextArea
-            label="Description"
-            value={values.description}
-            error={errors.description}
-            onChange={(event) => handleChange("description", event.target.value)}
-            onBlur={() => handleBlur("description")}
-          />
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label htmlFor="task-priority" className={styles.label}>
-                Priority
-              </label>
-              <select id="task-priority" value={values.priority} onChange={(event) => handleChange("priority", event.target.value)}>
-                <option value="VERY_LOW">Very low</option>
-                <option value="LOW">Low</option>
-                <option value="MODERATE">Moderate</option>
-                <option value="HIGH">High</option>
-                <option value="URGENT">Urgent</option>
-              </select>
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="task-status" className={styles.label}>
-                Status
-              </label>
-              <select id="task-status" value={values.status} onChange={(event) => handleChange("status", event.target.value)}>
-                <option value="NOT_STARTED">Not started</option>
-                <option value="IN_PROGRESS">In progress</option>
-                <option value="BLOCKED">Blocked</option>
-                <option value="COMPLETED">Completed</option>
-              </select>
-            </div>
+        <header className={styles.header}>
+          <div>
+            <h2 id={titleId} className={styles.heading}>
+              {task ? "Edit task" : "New task"}
+            </h2>
+            <p className={styles.subheading}>
+              {task ? "Update the details, then save." : "Name it, set priority, assign someone."}
+            </p>
           </div>
-          <div className={styles.field}>
-            <label htmlFor="task-assignee" className={styles.label}>
-              Assignee
-            </label>
-            <select
-              id="task-assignee"
-              value={values.assigneeMemberId}
-              onChange={(event) => handleChange("assigneeMemberId", event.target.value)}
+          <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </header>
+
+        <div className={styles.body}>
+          {(formError || deleteError) && <FormBanner variant="error">{formError ?? deleteError}</FormBanner>}
+          <form id="task-drawer-form" onSubmit={handleSubmit} className={styles.form}>
+            <TextField
+              label="Title"
+              value={values.title}
+              error={errors.title}
+              onChange={(event) => handleChange("title", event.target.value)}
+              onBlur={() => handleBlur("title")}
+            />
+            <TextArea
+              label="Description"
+              value={values.description}
+              error={errors.description}
+              onChange={(event) => handleChange("description", event.target.value)}
+              onBlur={() => handleBlur("description")}
+            />
+            <div className={styles.meta}>
+              <p className={styles.metaTitle}>Details</p>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label htmlFor="task-priority" className={styles.label}>
+                    Priority
+                  </label>
+                  <select
+                    id="task-priority"
+                    className={styles.select}
+                    value={values.priority}
+                    onChange={(event) => handleChange("priority", event.target.value)}
+                  >
+                    <option value="VERY_LOW">Very low</option>
+                    <option value="LOW">Low</option>
+                    <option value="MODERATE">Moderate</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="task-status" className={styles.label}>
+                    Status
+                  </label>
+                  <select
+                    id="task-status"
+                    className={styles.select}
+                    value={values.status}
+                    onChange={(event) => handleChange("status", event.target.value)}
+                  >
+                    <option value="NOT_STARTED">Not started</option>
+                    <option value="IN_PROGRESS">In progress</option>
+                    <option value="BLOCKED">Blocked</option>
+                    <option value="COMPLETED">Completed</option>
+                  </select>
+                </div>
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="task-assignee" className={styles.label}>
+                  Assignee
+                </label>
+                <select
+                  id="task-assignee"
+                  className={styles.select}
+                  value={values.assigneeMemberId}
+                  onChange={(event) => handleChange("assigneeMemberId", event.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div className={styles.actions}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting || isDeleting}>
+            Cancel
+          </Button>
+          {canDelete && (
+            <Button
+              type="button"
+              variant="secondary"
+              isLoading={isDeleting}
+              disabled={isSubmitting}
+              onClick={() => void handleDelete()}
             >
-              <option value="">Unassigned</option>
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.actions}>
-            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting || isDeleting}>
-              Cancel
+              Delete
             </Button>
-            {canDelete && (
-              <Button
-                type="button"
-                variant="secondary"
-                isLoading={isDeleting}
-                disabled={isSubmitting}
-                onClick={() => void handleDelete()}
-              >
-                Delete
-              </Button>
-            )}
-            <Button type="submit" variant="primary" isLoading={isSubmitting} disabled={isDeleting}>
-              {task ? "Save changes" : "Create task"}
-            </Button>
-          </div>
-        </form>
+          )}
+          <Button
+            type="submit"
+            form="task-drawer-form"
+            variant="primary"
+            isLoading={isSubmitting}
+            disabled={isDeleting}
+          >
+            {task ? "Save changes" : "Create task"}
+          </Button>
+        </div>
       </aside>
     </div>
   );

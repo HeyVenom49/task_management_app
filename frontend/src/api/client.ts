@@ -70,25 +70,33 @@ async function rawRequest<T>(path: string, options: ApiFetchOptions, token: stri
   return data as T;
 }
 
-let refreshInFlight: Promise<boolean> | null = null;
+type RefreshResult = { accessToken: string };
 
-async function refreshAccessToken(): Promise<boolean> {
+let refreshInFlight: Promise<RefreshResult | null> | null = null;
+
+/** Single-flight refresh used by boot, apiFetch 401 retry, and authApi.refresh. */
+export async function refreshSession(): Promise<RefreshResult | null> {
   if (refreshInFlight) {
     return refreshInFlight;
   }
   refreshInFlight = (async () => {
     try {
-      const data = await rawRequest<{ accessToken: string }>("/auth/refresh", { method: "POST" }, null);
+      const data = await rawRequest<RefreshResult>("/auth/refresh", { method: "POST" }, null);
       accessToken = data.accessToken;
-      return true;
+      return data;
     } catch {
       accessToken = null;
-      return false;
+      return null;
     } finally {
       refreshInFlight = null;
     }
   })();
   return refreshInFlight;
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  const data = await refreshSession();
+  return data !== null;
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {

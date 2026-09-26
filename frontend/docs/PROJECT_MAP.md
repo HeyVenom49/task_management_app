@@ -255,38 +255,32 @@ Delete task                  → DELETE /api/v1/projects/:id/tasks/:taskId      
 
 ## 12. Design Direction
 
-Established 2026-09-24 (brainstorming session), scope: full auth flow only (register, verify
-email, login, forgot/reset password, change password, logout, silent refresh, minimal
-authenticated placeholder home). Full spec: `docs/superpowers/specs/2026-09-24-auth-frontend-design.md`.
+Revised 2026-09-26 as **Docket Signal** (full visual overhaul; IA/routes/API unchanged).
+Original auth-only spec remains historical in `docs/superpowers/specs/2026-09-24-auth-frontend-design.md`.
+References (principles only, not clones): Linear density, Cursor singular accent, Cal clarity,
+Superhuman tight type — via `frontend/design-md/` + taste skill.
 
-- **Product name:** Docket — a docket is literally "a list of matters to be dealt with"
-  (legal/court usage), directly on-theme for task management, no industry-specific baggage.
-- **Personality:** dense & utilitarian (Linear/Superhuman-inspired, not cloned) — compact
-  spacing, no illustration/hero assets, monospace accents for metadata.
-- **Typography:** system-ui sans for UI text, `ui-monospace` for metadata/labels. No webfont.
-- **Color:** warm off-white background (#FAFAF9), near-black text (#17171A), single deep
-  oxblood/brick-red accent (#9A2B1F, "stamp ink" — a docket entry is stamped) kept visually
-  distinct from the brighter danger red (#DC2626). Semantic success/warning/info also defined.
-- **Spacing/radius/shadow:** 4px base spacing scale; 6px radius on inputs/buttons, 10px on
-  panels; shadows reserved for genuinely elevated surfaces (dropdowns), flat 1px borders
-  elsewhere.
-- **Motion (revised 2026-09-24):** state-driven, not decorative — native CSS + the View
-  Transitions API (no animation library). Page-to-page cross-fade between auth screens, card
-  entrance on mount, animated error/banner reveals, button press/loading cross-fade, a
-  password show/hide toggle, and a stroke-draw success checkmark on the two pure-confirmation
-  screens (verify-email, reset-password success). All wrapped for `prefers-reduced-motion`.
-- **Layout:** compact centered single-column card for auth screens, no split-screen hero.
-- **Stack:** React Router, plain CSS with custom-property tokens (no Tailwind), a small typed
-  `apiFetch` wrapper + React Context for session (no React Query), manual controlled forms via
-  one shared `useForm` hook (no react-hook-form). Access token in memory only, never persisted.
-- **Testing:** `bun test` + `@testing-library/react` (happy-dom), per repo's Bun-tooling rule.
+- **Product name:** Docket — "a list of matters to be dealt with."
+- **Personality:** cool utilitarian craft with editorial type presence — dense enough for daily
+  lists, not a marketing landing page.
+- **Typography:** self-hosted **Outfit** (UI) + **JetBrains Mono** (metadata only).
+- **Color:** cool zinc canvas (`#F4F4F5`), near-black ink (`#18181B`), singular **signal teal**
+  accent (`#0D9488` / hover `#0F766E`). Danger stays distinct (`#DC2626`). No oxblood.
+- **Spacing/radius/shadow:** 4px spacing scale; 6px / 10px radii; soft elevation on auth card +
+  drawer; hairline borders elsewhere.
+- **Motion:** state-driven CSS + View Transitions; auth panel enter, row hover, drawer slide;
+  all honor `prefers-reduced-motion`.
+- **Layout:** auth = asymmetric split (teal brand column + form); app = sticky frosted top bar,
+  max-width content column.
+- **Stack:** React Router, CSS modules + tokens (no Tailwind), `apiFetch` + Auth Context,
+  shared `useForm`. Access token in memory only.
+- **Testing:** `bun test` + `@testing-library/react` (happy-dom).
 
 ## 13. Design Decisions
 
-See the design doc above for full reasoning. Key ones worth remembering:
-- Accent color is thematically justified (stamp ink), not arbitrary — avoids CLAUDE.md's
-  "uniqueness must not come from randomly changing colors" trap.
-- No dark mode in v1 (deferred) — keeps scope focused on the auth flow itself.
+- Accent is **signal teal** (from-scratch 2026-09-26 overhaul), not stamp-ink oxblood.
+- Design-md brands are reference vocabulary only — no copied palettes, proprietary fonts, or layouts.
+- No dark mode in v1 (deferred).
 - `register` does not auto-login (backend returns only `{ user }`, no tokens) — UI must route
   to a "check your email" screen, not straight into the app.
 - `refresh` returns only a new access token, not the user — app-boot flow is

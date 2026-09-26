@@ -13,12 +13,14 @@
 
 .dangerZone {
   padding: var(--space-4);
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  border: 1px solid rgba(185, 28, 28, 0.22);
   border-radius: var(--radius-md);
+  background: rgba(185, 28, 28, 0.04);
 }
 
 .dangerTitle {
   margin: 0 0 var(--space-3);
   font-size: var(--text-md);
   color: var(--danger);
+  letter-spacing: -0.02em;
 }
