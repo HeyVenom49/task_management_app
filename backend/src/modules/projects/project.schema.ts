@@ -21,5 +21,9 @@ export const memberParamsSchema = z.object({
   memberId: z.string().uuid(),
 });
 
+export const transferOwnershipSchema = z.object({
+  newOwnerMemberId: z.string().uuid(),
+});
+
 export type CreateProjectBody = z.infer<typeof createProjectSchema>;
 export type UpdateProjectBody = z.infer<typeof updateProjectSchema>;

@@ -10,6 +10,7 @@ const envSchema = z.object({
   REFRESH_EXPIRES_IN: z.string().default("7d"),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
   COOKIE_SECURE: z.coerce.boolean().default(false),
+  REDIS_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.parse(process.env);
@@ -23,6 +24,7 @@ const env = {
   refreshExpiresIn: parsed.REFRESH_EXPIRES_IN,
   frontendUrl: parsed.FRONTEND_URL,
   cookieSecure: parsed.COOKIE_SECURE,
+  redisUrl: parsed.REDIS_URL,
 };
 
 export default env;

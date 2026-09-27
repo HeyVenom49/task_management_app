@@ -7,6 +7,7 @@ import {
 } from "../../shared/errors";
 import type { MemberRepository } from "./member.repository";
 import type { AuthRepository } from "../auth/auth.repository";
+import { addAbortListener } from "events";
 
 export class ProjectServices {
   constructor(
@@ -204,5 +205,50 @@ export class ProjectServices {
       throw new BadRequestError("Could not reactivate member");
     }
     return { member };
+  }
+
+  public async transferOwnership(
+    actorId: string,
+    projectId: string,
+    newOwnerMemberId: string,
+  ) {
+    const { membership: actorMembership } = await this.requireOwner(
+      actorId,
+      projectId,
+    );
+
+    if (actorMembership.id === newOwnerMemberId) {
+      throw new BadRequestError("Cannot transfer ownership to yourself");
+    }
+
+    const target = await this.memberRepo.findById(newOwnerMemberId);
+    if (
+      !target ||
+      target.projectId !== projectId ||
+      target.status !== "ACTIVE"
+    ) {
+      throw new BadRequestError("Member not found");
+    }
+
+    // optional but clear:
+    if (target.role === "OWNER") {
+      throw new ConflictError("Member is already an owner");
+    }
+
+    return await this.sql.begin(async (tx) => {
+      const newOwner = await this.memberRepo.updateRole(target.id, "OWNER", tx);
+
+      const previousOwner = await this.memberRepo.updateRole(
+        actorMembership.id,
+        "MEMBER",
+        tx,
+      );
+
+      if (!newOwner || !previousOwner) {
+        throw new BadRequestError("Could not transfer ownership");
+      }
+
+      return { previousOwner, newOwner };
+    });
   }
 }

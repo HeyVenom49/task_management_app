@@ -7,7 +7,7 @@ type TaskRow = {
   id: string;
   project_id: string;
   creator_member_id: string;
-  assignee_member_id: string;
+  assignee_member_id: string | null;
   title: string;
   description: string | null;
   priority: Task["priority"];

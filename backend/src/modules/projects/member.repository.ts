@@ -144,4 +144,18 @@ export class MemberRepository {
     `;
     return row ? this.map(row as MemberRow) : null;
   }
+
+  public async updateRole(
+    memberId: string,
+    role: "OWNER" | "MEMBER",
+    db: Db = this.sql,
+  ): Promise<Member | null> {
+    const [row] = await db`
+      UPDATE members
+      SET role = ${role}, updated_at = NOW()
+      WHERE id = ${memberId} AND status = 'ACTIVE'
+      RETURNING id, user_id, project_id, role, status, created_at, updated_at
+    `;
+    return row ? this.map(row as MemberRow) : null;
+  }
 }

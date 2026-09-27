@@ -5,6 +5,8 @@ import { errorHandler } from "./shared/middleware/errorHandler";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import env from "./config/env";
+import { requestId } from "./shared/middleware/requestId";
+import { requestLogger } from "./shared/middleware/requestLogger";
 
 const app = express();
 
@@ -14,6 +16,10 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(requestId);
+
+app.use(requestLogger);
 
 app.use(cookieParser());
 

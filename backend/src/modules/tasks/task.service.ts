@@ -46,6 +46,46 @@ export class TaskService {
     }
   }
 
+  private assertCanUpdateTask(
+    membership: { id: string; role: "OWNER" | "MEMBER" },
+    task: { creatorMemberId: string; assigneeMemberId: string | null },
+    input: UpdateTaskInput,
+  ): void {
+    const isOwner = membership.role === "OWNER";
+    const isCreator = task.creatorMemberId === membership.id;
+    const isAssignee = task.assigneeMemberId === membership.id;
+
+    // who can update at all?
+    if (!isOwner && !isCreator && !isAssignee) {
+      throw new ForbiddenError("You cannot update this task");
+    }
+
+    // What fields may appear in the body?
+    // Owner/Creator -> any UpdateTaskInput key
+    // Assignee -> only "status"
+    const allowed: readonly (keyof UpdateTaskInput)[] =
+      isOwner || isCreator
+        ? ([
+            "title",
+            "description",
+            "priority",
+            "status",
+            "assigneeMemberId",
+          ] as const)
+        : (["status"] as const);
+
+    // Which keys did the client actually send?
+    const sent = (Object.keys(input) as (keyof UpdateTaskInput)[]).filter(
+      (key) => input[key] !== undefined,
+    );
+
+    // Mixed / forbidden fields -> reject entire request
+    const forbidden = sent.filter((key) => !allowed.includes(key));
+    if (forbidden.length > 0) {
+      throw new ForbiddenError("You cannot update one or more of these fields");
+    }
+  }
+
   public async create(
     userId: string,
     projectId: string,
@@ -87,12 +127,14 @@ export class TaskService {
     taskId: string,
     input: UpdateTaskInput,
   ) {
-    await this.requireActiveMember(userId, projectId);
+    const membership = await this.requireActiveMember(userId, projectId);
 
     const existing = await this.taskRepo.findById(taskId);
     if (!existing || existing.projectId !== projectId) {
       throw new BadRequestError("Task not found");
     }
+
+    this.assertCanUpdateTask(membership, existing, input);
 
     if (input.assigneeMemberId !== undefined) {
       await this.assertAssigneeInProject(projectId, input.assigneeMemberId);

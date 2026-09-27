@@ -4,6 +4,7 @@ import {
   createProjectSchema,
   memberParamsSchema,
   projectIdParamsSchema,
+  transferOwnershipSchema,
   updateProjectSchema,
 } from "./project.schema";
 import type { ProjectServices } from "./project.service";
@@ -227,6 +228,46 @@ export class ProjectController {
         req.user.id,
         params.data.id,
         params.data.memberId,
+      );
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  public async transferOwnership(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const params = projectIdParamsSchema.safeParse(req.params);
+      if (!params.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: params.error.flatten().fieldErrors,
+        });
+        return;
+      }
+
+      const parsed = transferOwnershipSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: parsed.error.flatten().fieldErrors,
+        });
+        return;
+      }
+
+      const result = await this.service.transferOwnership(
+        req.user.id,
+        params.data.id,
+        params.data.id,
       );
       res.status(200).json(result);
     } catch (err) {

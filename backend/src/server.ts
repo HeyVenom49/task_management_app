@@ -2,12 +2,14 @@ import "dotenv/config";
 import { app } from "./app";
 import http from "node:http";
 import env from "./config/env";
+import { connectRedis } from "./shared/redis/redis";
 
 const PORT = env.port;
 
 const server = http.createServer(app);
 
 async function start() {
+  await connectRedis();
   await new Promise<void>((resolve) => {
     server.listen(PORT, () => {
       console.log(`Server is running on the http://localhost:${PORT}`);

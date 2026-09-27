@@ -25,6 +25,9 @@ projectRouter.post("/:id/members", (req, res, next) =>
 projectRouter.post("/:id/members/:memberId/reactivate", (req, res, next) =>
   controller.reactivateMember(req, res, next),
 );
+projectRouter.post("/:id/transfer-ownership", (req, res, next) =>
+  controller.transferOwnership(req, res, next),
+);
 
 // GET
 projectRouter.get("/", (req, res, next) => controller.list(req, res, next));

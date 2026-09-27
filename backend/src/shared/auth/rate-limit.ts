@@ -1,15 +1,35 @@
+import type { RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
+import { redis } from "../redis/redis";
+import { RedisStore } from "rate-limit-redis";
 
-export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: "Too many login attempts. Try again later." },
-});
+const isTest = process.env.NODE_ENV === "test";
 
-export const authWriteLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { message: "Too many requests. Try again later." },
-});
+const passthrough: RequestHandler = (_req, _res, next) => next();
+
+function buildLimiter(message: string, max = 10): RequestHandler {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message },
+    store: new RedisStore({
+      sendCommand: async (...args: string[]) => {
+        if (!redis.isOpen) {
+          await redis.connect();
+        }
+        return redis.sendCommand(args);
+      },
+      prefix: "rl:",
+    }),
+  });
+}
+
+export const loginLimiter = isTest
+  ? passthrough
+  : buildLimiter("Too many login attempts. Try again later.");
+
+export const authWriteLimiter = isTest
+  ? passthrough
+  : buildLimiter("Too many requests. Try again later.");

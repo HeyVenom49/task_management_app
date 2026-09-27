@@ -6,6 +6,7 @@ declare module "express-serve-static-core" {
       id: string;
       email: string;
     };
+    requestId?: string;
     cookies: Record<string, string>;
   }
 }
