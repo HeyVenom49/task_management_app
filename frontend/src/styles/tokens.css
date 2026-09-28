@@ -3,6 +3,7 @@
   --bg: #f3f1ec;
   --bg-accent: #e8e4db;
   --bg-glow: rgba(15, 118, 110, 0.07);
+  --bg-glow-secondary: rgba(180, 83, 9, 0.04);
   --surface: #fffefb;
   --surface-raised: #f7f5f0;
   --surface-inset: #efece5;
@@ -64,6 +65,7 @@
   --bg: #171310;
   --bg-accent: #1f1a14;
   --bg-glow: rgba(45, 212, 191, 0.08);
+  --bg-glow-secondary: rgba(251, 146, 60, 0.06);
   --surface: #1c1814;
   --surface-raised: #221d17;
   --surface-inset: #14110d;

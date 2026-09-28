@@ -10,6 +10,8 @@
   display: flex;
   align-items: flex-end;
   padding: var(--space-12) var(--space-8);
+  /* Fixed brand-identity panel (this block, .brandGlow, and .tagline's color) —
+     intentionally theme-invariant. It presents the Docket brand, not app content. */
   background:
     radial-gradient(600px 420px at 20% 80%, rgba(45, 212, 191, 0.18), transparent 60%),
     linear-gradient(155deg, #134e4a 0%, #0f766e 38%, #1c1917 100%);

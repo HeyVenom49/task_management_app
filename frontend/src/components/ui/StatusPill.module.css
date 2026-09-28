@@ -10,21 +10,21 @@
 }
 
 .NOT_STARTED {
-  background: rgba(138, 138, 144, 0.14);
+  background: color-mix(in srgb, var(--text-secondary) 14%, transparent);
   color: var(--text-secondary);
 }
 
 .IN_PROGRESS {
-  background: rgba(54, 84, 166, 0.14);
+  background: color-mix(in srgb, var(--info) 14%, transparent);
   color: var(--info);
 }
 
 .BLOCKED {
-  background: rgba(180, 83, 9, 0.14);
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
   color: var(--warning);
 }
 
 .COMPLETED {
-  background: rgba(21, 128, 61, 0.14);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
   color: var(--success);
 }

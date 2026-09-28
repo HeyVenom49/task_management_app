@@ -13,9 +13,9 @@
 
 .dangerZone {
   padding: var(--space-4);
-  border: 1px solid rgba(185, 28, 28, 0.22);
+  border: 1px solid color-mix(in srgb, var(--danger) 22%, transparent);
   border-radius: var(--radius-md);
-  background: rgba(185, 28, 28, 0.04);
+  background: color-mix(in srgb, var(--danger) 4%, transparent);
 }
 
 .dangerTitle {
