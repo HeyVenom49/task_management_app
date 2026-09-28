@@ -35,4 +35,5 @@ export type UpdateTaskInput = {
   priority?: TaskPriority;
   status?: TaskStatus;
   assigneeMemberId?: string | null;
+  expectedUpdatedAt: string;
 };

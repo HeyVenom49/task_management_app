@@ -52,7 +52,10 @@ describe("task/project IDOR", () => {
     const patchRes = await api()
       .patch(`/api/v1/projects/${projectA.id}/tasks/${bobTaskId}`)
       .set(authHeader(alice.accessToken))
-      .send({ title: "Hacked" });
+      .send({
+        title: "Hacked",
+        expectedUpdatedAt: "2026-01-01T00:00:00.000Z",
+      });
 
     expect(patchRes.status).toBe(404);
   });

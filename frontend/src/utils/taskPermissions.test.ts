@@ -50,21 +50,25 @@ describe("buildTaskUpdateInput", () => {
     assigneeMemberId: "m-assignee",
   };
 
-  test("status mode only includes status", () => {
-    expect(buildTaskUpdateInput("status", form)).toEqual({ status: "COMPLETED" });
+  test("status mode only includes status + expectedUpdatedAt", () => {
+    expect(buildTaskUpdateInput("status", form, task.updatedAt)).toEqual({
+      status: "COMPLETED",
+      expectedUpdatedAt: task.updatedAt,
+    });
   });
 
-  test("full mode includes all fields", () => {
-    expect(buildTaskUpdateInput("full", form)).toEqual({
+  test("full mode includes all fields + expectedUpdatedAt", () => {
+    expect(buildTaskUpdateInput("full", form, task.updatedAt)).toEqual({
       title: "Renamed",
       description: null,
       priority: "HIGH",
       status: "COMPLETED",
       assigneeMemberId: "m-assignee",
+      expectedUpdatedAt: task.updatedAt,
     });
   });
 
   test("none returns null", () => {
-    expect(buildTaskUpdateInput("none", form)).toBeNull();
+    expect(buildTaskUpdateInput("none", form, task.updatedAt)).toBeNull();
   });
 });

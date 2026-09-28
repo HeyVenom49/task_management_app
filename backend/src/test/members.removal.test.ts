@@ -59,12 +59,91 @@ describe("member removal", () => {
     const completed = await api()
       .patch(`/api/v1/projects/${projectId}/tasks/${taskId}`)
       .set(authHeader(owner.accessToken))
-      .send({ status: "COMPLETED" });
+      .send({
+        status: "COMPLETED",
+        expectedUpdatedAt: task.body.task.updatedAt,
+      });
     expect(completed.status).toBe(200);
 
     const removed = await api()
       .delete(`/api/v1/projects/${projectId}/members/${bobMember.id}`)
       .set(authHeader(owner.accessToken));
     expect(removed.status).toBe(200);
+  });
+
+  test("parallel remove vs assign -> never inactive with open assignment", async () => {
+    const owner = await registerVerifiedUser({
+      name: "OwnerRace",
+      email: "owner-race@example.com",
+      password: "password123",
+    });
+    await registerVerifiedUser({
+      name: "BobRace",
+      email: "bob-race@example.com",
+      password: "password123",
+    });
+
+    const project = await api()
+      .post("/api/v1/projects")
+      .set(authHeader(owner.accessToken))
+      .send({ info: "Remove assign race" });
+    const projectId = project.body.project.id as string;
+
+    await api()
+      .post(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(owner.accessToken))
+      .send({ email: "bob-race@example.com" });
+
+    const members = await api()
+      .get(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(owner.accessToken));
+    const bobMember = members.body.members.find(
+      (m: { email: string }) => m.email === "bob-race@example.com",
+    );
+    expect(bobMember).toBeTruthy();
+
+    await Promise.all([
+      api()
+        .delete(`/api/v1/projects/${projectId}/members/${bobMember.id}`)
+        .set(authHeader(owner.accessToken)),
+      api()
+        .post(`/api/v1/projects/${projectId}/tasks`)
+        .set(authHeader(owner.accessToken))
+        .send({
+          title: "Race task",
+          priority: "MODERATE",
+          assigneeMemberId: bobMember.id,
+          status: "IN_PROGRESS",
+        }),
+    ]);
+
+    const afterMembers = await api()
+      .get(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(owner.accessToken));
+    expect(afterMembers.status).toBe(200);
+
+    // list endpoint returns ACTIVE only — missing Bob means removed
+    const bobStillActive = (
+      afterMembers.body.members as Array<{ id: string }>
+    ).some((m) => m.id === bobMember.id);
+
+    const tasks = await api()
+      .get(`/api/v1/projects/${projectId}/tasks`)
+      .set(authHeader(owner.accessToken));
+    expect(tasks.status).toBe(200);
+
+    const openOnBob = (
+      tasks.body.tasks as Array<{
+        assigneeMemberId: string | null;
+        status: string;
+      }>
+    ).filter(
+      (t) =>
+        t.assigneeMemberId === bobMember.id && t.status !== "COMPLETED",
+    );
+
+    if (!bobStillActive) {
+      expect(openOnBob).toHaveLength(0);
+    }
   });
 });

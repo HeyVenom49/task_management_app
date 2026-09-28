@@ -8,7 +8,7 @@ import { authenticate } from "../../shared/middleware/authenticate";
 
 const taskRepo = new TaskRepository(sql);
 const memberRepo = new MemberRepository(sql);
-const service = new TaskService(taskRepo, memberRepo);
+const service = new TaskService(sql, taskRepo, memberRepo);
 const controller = new TaskController(service);
 
 const taskRouter = Router({ mergeParams: true });

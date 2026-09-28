@@ -54,6 +54,15 @@ export class ProjectServices {
     );
   }
 
+  private isCheckViolation(err: unknown): boolean {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: string }).code === "23514"
+    );
+  }
+
   public async create(userId: string, info: string) {
     try {
       return await this.sql.begin(async (tx) => {
@@ -173,40 +182,49 @@ export class ProjectServices {
   ) {
     await this.requireOwner(actorId, projectId);
 
-    await this.sql.begin(async (tx) => {
-      const [locked] = await tx`
-        SELECT id, role, status, project_id
-        FROM members
-        WHERE id = ${memberId}
-        FOR UPDATE
-      `;
+    try {
+      await this.sql.begin(async (tx) => {
+        const [locked] = await tx`
+          SELECT id, role, status, project_id
+          FROM members
+          WHERE id = ${memberId}
+          FOR UPDATE
+        `;
 
-      if (
-        !locked ||
-        locked.project_id !== projectId ||
-        locked.status !== "ACTIVE"
-      ) {
-        throw new NotFoundError("Member not found");
-      }
-
-      if (locked.role === "OWNER") {
-        const owners = await this.memberRepo.countActiveOwners(projectId, tx);
-
-        if (owners <= 1) {
-          throw new BadRequestError("Cannot remove the last owner");
+        if (
+          !locked ||
+          locked.project_id !== projectId ||
+          locked.status !== "ACTIVE"
+        ) {
+          throw new NotFoundError("Member not found");
         }
-      }
 
-      const open = await this.taskRepo.countOpenAssignedTo(memberId, tx);
+        if (locked.role === "OWNER") {
+          const owners = await this.memberRepo.countActiveOwners(projectId, tx);
 
-      if (open > 0) {
+          if (owners <= 1) {
+            throw new BadRequestError("Cannot remove the last owner");
+          }
+        }
+
+        const open = await this.taskRepo.countOpenAssignedTo(memberId, tx);
+
+        if (open > 0) {
+          throw new ConflictError(
+            "Cannot remove a member who is assigned to open tasks",
+          );
+        }
+
+        await this.memberRepo.deactivate(memberId, tx);
+      });
+    } catch (err) {
+      if (this.isCheckViolation(err)) {
         throw new ConflictError(
           "Cannot remove a member who is assigned to open tasks",
         );
       }
-
-      await this.memberRepo.deactivate(memberId, tx);
-    });
+      throw err;
+    }
   }
 
   public async reactivateMember(

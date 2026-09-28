@@ -10,7 +10,9 @@ export const createTaskSchema = z.object({
   assigneeMemberId: z.string().uuid().optional().nullable(),
 });
 
-export const updateTaskSchema = createTaskSchema.partial();
+export const updateTaskSchema = createTaskSchema.partial().extend({
+  expectedUpdatedAt: z.string().datetime(),
+});
 
 export const taskParamsSchema = z.object({
   id: z.string().uuid(),

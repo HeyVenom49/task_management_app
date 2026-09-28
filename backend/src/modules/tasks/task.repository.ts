@@ -66,8 +66,11 @@ export class TaskRepository {
     return this.map(row as TaskRow);
   }
 
-  public async findById(taskId: string): Promise<Task | null> {
-    const [row] = await this.sql`
+  public async findById(
+    taskId: string,
+    db: Db = this.sql,
+  ): Promise<Task | null> {
+    const [row] = await db`
         SELECT
             id, project_id, creator_member_id, assignee_member_id, title,
             description, priority, status, created_at, updated_at
@@ -93,8 +96,9 @@ export class TaskRepository {
   public async update(
     taskId: string,
     input: UpdateTaskInput,
+    db: Db = this.sql,
   ): Promise<Task | null> {
-    const current = await this.findById(taskId);
+    const current = await this.findById(taskId, db);
     if (!current) return null;
 
     const title = input.title ?? current.title;
@@ -107,7 +111,7 @@ export class TaskRepository {
         ? input.assigneeMemberId
         : current.assigneeMemberId;
 
-    const [row] = await this.sql`
+    const [row] = await db`
         UPDATE tasks
         SET
             title = ${title},
@@ -117,6 +121,7 @@ export class TaskRepository {
             assignee_member_id = ${assigneeMemberId},
             updated_at = NOW()
         WHERE id = ${taskId}
+          AND date_trunc('milliseconds', updated_at) = ${new Date(input.expectedUpdatedAt)}
         RETURNING
             id, project_id, creator_member_id, assignee_member_id, title, description, priority, status, created_at, updated_at
     `;

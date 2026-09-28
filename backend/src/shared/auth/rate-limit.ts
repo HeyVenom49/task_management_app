@@ -21,8 +21,9 @@ function buildLimiter(message: string, max = 10): RequestHandler {
           if (!redis.isOpen) {
             await redis.connect();
           }
-          return redis.sendCommand(args);
+          return await redis.sendCommand(args);
         } catch {
+          // Fail-closed: Redis down -> 503 (do not skip rate limits)
           throw new ServiceUnavailableError(
             "Rate limiting unavailable. Try again later.",
           );

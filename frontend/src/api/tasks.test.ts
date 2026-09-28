@@ -71,7 +71,10 @@ describe("tasks API layer", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const result = await tasksApi.updateTask("p1", "t1", { status: "IN_PROGRESS" });
+    const result = await tasksApi.updateTask("p1", "t1", {
+      status: "IN_PROGRESS",
+      expectedUpdatedAt: sampleTask.updatedAt,
+    });
     expect(result.task.status).toBe("IN_PROGRESS");
   });
 

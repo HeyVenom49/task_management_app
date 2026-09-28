@@ -161,4 +161,32 @@ export class MemberRepository {
     `;
     return row ? this.map(row as MemberRow) : null;
   }
+
+  public async lockById(
+    memberId: string,
+    db: Db = this.sql,
+  ): Promise<Member | null> {
+    const [row] = await db`
+      SELECT id, user_id, project_id, role, status, created_at, updated_at
+      FROM members
+      WHERE id = ${memberId}
+      FOR UPDATE
+    `;
+    return row ? this.map(row as MemberRow) : null;
+  }
+
+  public async lockByUserAndProject(
+    userId: string,
+    projectId: string,
+    db: Db = this.sql,
+  ): Promise<Member | null> {
+    const [row] = await db`
+      SELECT id, user_id, project_id, role, status, created_at, updated_at
+      FROM members
+      WHERE user_id = ${userId} AND project_id = ${projectId}
+      FOR UPDATE
+    `;
+
+    return row ? this.map(row as MemberRow) : null;
+  }
 }

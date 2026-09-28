@@ -36,11 +36,15 @@ export function buildTaskUpdateInput(
     status: string;
     assigneeMemberId: string;
   },
+  expectedUpdatedAt: string,
 ): UpdateTaskInput | null {
   if (mode === "none") return null;
 
   if (mode === "status") {
-    return { status: formValues.status as UpdateTaskInput["status"] };
+    return {
+      status: formValues.status as UpdateTaskInput["status"],
+      expectedUpdatedAt,
+    };
   }
 
   return {
@@ -49,5 +53,6 @@ export function buildTaskUpdateInput(
     priority: formValues.priority as UpdateTaskInput["priority"],
     status: formValues.status as UpdateTaskInput["status"],
     assigneeMemberId: formValues.assigneeMemberId === "" ? null : formValues.assigneeMemberId,
+    expectedUpdatedAt,
   };
 }

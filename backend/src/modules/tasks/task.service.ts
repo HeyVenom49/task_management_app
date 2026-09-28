@@ -2,13 +2,17 @@ import type { TaskRepository } from "./task.repository";
 import type { MemberRepository } from "../projects/member.repository";
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   NotFoundError,
 } from "../../shared/errors";
 import type { CreateTaskInput, UpdateTaskInput } from "./task.types";
+import type { Sql, TransactionSql } from "postgres";
 
+type Db = Sql | TransactionSql;
 export class TaskService {
   constructor(
+    private readonly sql: Sql,
     private readonly taskRepo: TaskRepository,
     private readonly memberRepo: MemberRepository,
   ) {}
@@ -37,10 +41,11 @@ export class TaskService {
   private async assertAssigneeInProject(
     projectId: string,
     assigneeMemberId: string | null | undefined,
+    db: Db,
   ) {
     if (assigneeMemberId == null) return;
 
-    const assignee = await this.memberRepo.findById(assigneeMemberId);
+    const assignee = await this.memberRepo.lockById(assigneeMemberId, db);
     if (
       !assignee ||
       assignee.projectId !== projectId ||
@@ -80,7 +85,7 @@ export class TaskService {
 
     // Which keys did the client actually send?
     const sent = (Object.keys(input) as (keyof UpdateTaskInput)[]).filter(
-      (key) => input[key] !== undefined,
+      (key) => input[key] !== undefined && key !== "expectedUpdatedAt",
     );
 
     // Mixed / forbidden fields -> reject entire request
@@ -90,24 +95,70 @@ export class TaskService {
     }
   }
 
+  private isCheckViolation(err: unknown): boolean {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: string }).code === "23514"
+    );
+  }
+
+  private async requireActiveMemberLocked(
+    userId: string,
+    projectId: string,
+    db: Db,
+  ) {
+    const membership = await this.memberRepo.lockByUserAndProject(
+      userId,
+      projectId,
+      db,
+    );
+    if (!membership || membership.status !== "ACTIVE") {
+      throw new ForbiddenError("You do not have access to this project");
+    }
+    return membership;
+  }
+
   public async create(
     userId: string,
     projectId: string,
     input: Omit<CreateTaskInput, "projectId" | "creatorMemberId">,
   ) {
-    const membership = await this.requireActiveMember(userId, projectId);
-    await this.assertAssigneeInProject(projectId, input.assigneeMemberId);
+    try {
+      return await this.sql.begin(async (tx) => {
+        const membership = await this.requireActiveMemberLocked(
+          userId,
+          projectId,
+          tx,
+        );
 
-    const task = await this.taskRepo.create({
-      projectId,
-      creatorMemberId: membership.id,
-      assigneeMemberId: input.assigneeMemberId ?? null,
-      title: input.title,
-      description: input.description ?? null,
-      priority: input.priority,
-      status: input.status ?? "NOT_STARTED",
-    });
-    return { task };
+        await this.assertAssigneeInProject(
+          projectId,
+          input.assigneeMemberId,
+          tx,
+        );
+
+        const task = await this.taskRepo.create(
+          {
+            projectId,
+            creatorMemberId: membership.id,
+            assigneeMemberId: input.assigneeMemberId ?? null,
+            title: input.title,
+            description: input.description ?? null,
+            priority: input.priority,
+            status: input.status ?? "NOT_STARTED",
+          },
+          tx,
+        );
+        return { task };
+      });
+    } catch (err) {
+      if (this.isCheckViolation(err)) {
+        throw new BadRequestError("Invalid assignee");
+      }
+      throw err;
+    }
   }
 
   public async list(userId: string, projectId: string) {
@@ -131,21 +182,44 @@ export class TaskService {
     taskId: string,
     input: UpdateTaskInput,
   ) {
-    const membership = await this.requireActiveMember(userId, projectId);
+    try {
+      return await this.sql.begin(async (tx) => {
+        const membership = await this.requireActiveMemberLocked(
+          userId,
+          projectId,
+          tx,
+        );
 
-    const existing = await this.taskRepo.findById(taskId);
-    if (!existing || existing.projectId !== projectId) {
-      throw new NotFoundError("Task not found");
+        const existing = await this.taskRepo.findById(taskId, tx);
+        if (!existing || existing.projectId !== projectId) {
+          throw new NotFoundError("Task not found");
+        }
+
+        this.assertCanUpdateTask(membership, existing, input);
+
+        if (input.assigneeMemberId !== undefined) {
+          await this.assertAssigneeInProject(
+            projectId,
+            input.assigneeMemberId,
+            tx,
+          );
+        }
+        const task = await this.taskRepo.update(taskId, input, tx);
+        if (!task) {
+          const still = await this.taskRepo.findById(taskId, tx);
+          if (!still || still.projectId !== projectId) {
+            throw new NotFoundError("Task not found");
+          }
+          throw new ConflictError("Task was modified; reload and try again");
+        }
+        return { task };
+      });
+    } catch (err) {
+      if (this.isCheckViolation(err)) {
+        throw new BadRequestError("Invalid assignee");
+      }
+      throw err;
     }
-
-    this.assertCanUpdateTask(membership, existing, input);
-
-    if (input.assigneeMemberId !== undefined) {
-      await this.assertAssigneeInProject(projectId, input.assigneeMemberId);
-    }
-
-    const task = await this.taskRepo.update(taskId, input);
-    return { task };
   }
 
   public async remove(userId: string, projectId: string, taskId: string) {

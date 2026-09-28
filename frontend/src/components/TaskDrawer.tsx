@@ -82,7 +82,7 @@ export function TaskDrawer({
       },
       async onSubmit(formValues) {
         if (task) {
-          const input = buildTaskUpdateInput(editMode, formValues);
+          const input = buildTaskUpdateInput(editMode, formValues, task.updatedAt);
           if (!input) return;
           const result = await updateTask(projectId, task.id, input);
           onUpdated(result.task);

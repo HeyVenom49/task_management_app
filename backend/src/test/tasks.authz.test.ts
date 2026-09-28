@@ -56,29 +56,35 @@ describe("task update authorization", () => {
         assigneeMemberId: assigneeMember.id,
       });
     const taskId = taskRes.body.task.id as string;
+    let expectedUpdatedAt = taskRes.body.task.updatedAt as string;
 
     const ok = await api()
       .patch(`/api/v1/projects/${projectId}/tasks/${taskId}`)
       .set(authHeader(assignee.accessToken))
-      .send({ status: "IN_PROGRESS" });
+      .send({ status: "IN_PROGRESS", expectedUpdatedAt });
     expect(ok.status).toBe(200);
+    expectedUpdatedAt = ok.body.task.updatedAt as string;
 
     const mixed = await api()
       .patch(`/api/v1/projects/${projectId}/tasks/${taskId}`)
       .set(authHeader(assignee.accessToken))
-      .send({ status: "COMPLETED", priority: "URGENT" });
+      .send({
+        status: "COMPLETED",
+        priority: "URGENT",
+        expectedUpdatedAt,
+      });
     expect(mixed.status).toBe(403);
 
     const blocked = await api()
       .patch(`/api/v1/projects/${projectId}/tasks/${taskId}`)
       .set(authHeader(other.accessToken))
-      .send({ status: "COMPLETED" });
+      .send({ status: "COMPLETED", expectedUpdatedAt });
     expect(blocked.status).toBe(403);
 
     const ownerPatch = await api()
       .patch(`/api/v1/projects/${projectId}/tasks/${taskId}`)
       .set(authHeader(owner.accessToken))
-      .send({ title: "Renamed", priority: "HIGH" });
+      .send({ title: "Renamed", priority: "HIGH", expectedUpdatedAt });
     expect(ownerPatch.status).toBe(200);
   });
 });

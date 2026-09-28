@@ -22,4 +22,6 @@ export type CreateTaskInput = {
   assigneeMemberId?: string | null;
 };
 
-export type UpdateTaskInput = Partial<CreateTaskInput>;
+export type UpdateTaskInput = Partial<CreateTaskInput> & {
+  expectedUpdatedAt: string;
+};

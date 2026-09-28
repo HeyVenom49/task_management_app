@@ -156,7 +156,10 @@ describe("TaskDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => expect(updateTaskMock).toHaveBeenCalledTimes(1));
-    expect(updateTaskMock).toHaveBeenCalledWith("p1", "t1", { status: "IN_PROGRESS" });
+    expect(updateTaskMock).toHaveBeenCalledWith("p1", "t1", {
+      status: "IN_PROGRESS",
+      expectedUpdatedAt: assigned.updatedAt,
+    });
   });
 
   test("other member sees read-only edit with no Save", () => {

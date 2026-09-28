@@ -264,6 +264,7 @@ components:
 
     UpdateTaskBody:
       type: object
+      required: [expectedUpdatedAt]
       properties:
         title:
           type: string
@@ -281,6 +282,12 @@ components:
           type: string
           format: uuid
           nullable: true
+        expectedUpdatedAt:
+          type: string
+          format: date-time
+          description: >
+            updatedAt from the last read. Update succeeds only if it still matches
+            the row (optimistic concurrency).
 
 security:
   - bearerAuth: []
@@ -982,9 +989,10 @@ paths:
       tags: [Tasks]
       summary: Update task
       description: |
-        OWNER or creator may send any UpdateTaskBody fields.
-        Assignee may send only status; any other field → 403 (entire request rejected).
+        OWNER or creator may send any UpdateTaskBody fields (plus required expectedUpdatedAt).
+        Assignee may send only status (+ expectedUpdatedAt); any other field → 403 (entire request rejected).
         Other members → 403.
+        expectedUpdatedAt must match the current row updatedAt or the API returns 409.
       requestBody:
         required: true
         content:
@@ -1002,7 +1010,7 @@ paths:
                   task:
                     $ref: "#/components/schemas/Task"
         "400":
-          description: Invalid assignee
+          description: Invalid assignee / validation
           content:
             application/json:
               schema:
@@ -1015,6 +1023,12 @@ paths:
                 $ref: "#/components/schemas/ErrorMessage"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: Stale expectedUpdatedAt (task was modified)
           content:
             application/json:
               schema:
