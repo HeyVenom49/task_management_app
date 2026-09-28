@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { redis } from "../redis/redis";
 import { RedisStore } from "rate-limit-redis";
+import { ServiceUnavailableError } from "../errors";
 
 const isTest = process.env.NODE_ENV === "test";
 
@@ -16,10 +17,16 @@ function buildLimiter(message: string, max = 10): RequestHandler {
     message: { message },
     store: new RedisStore({
       sendCommand: async (...args: string[]) => {
-        if (!redis.isOpen) {
-          await redis.connect();
+        try {
+          if (!redis.isOpen) {
+            await redis.connect();
+          }
+          return redis.sendCommand(args);
+        } catch {
+          throw new ServiceUnavailableError(
+            "Rate limiting unavailable. Try again later.",
+          );
         }
-        return redis.sendCommand(args);
       },
       prefix: "rl:",
     }),

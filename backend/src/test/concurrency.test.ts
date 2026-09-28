@@ -147,4 +147,75 @@ describe("concurrency", () => {
     const oldOwner = list.find((m) => m.id === ownerMemberId);
     expect(oldOwner?.role).toBe("MEMBER");
   });
+
+  test("transfer then former owner transfer again -> 403 and still one owner", async () => {
+    const owner = await registerVerifiedUser({
+      name: "Owner2",
+      email: "owner2@example.com",
+      password: "password123",
+    });
+    const m1 = await registerVerifiedUser({
+      name: "MemA",
+      email: "mema@example.com",
+      password: "password123",
+    });
+    const m2 = await registerVerifiedUser({
+      name: "MemB",
+      email: "memb@example.com",
+      password: "password123",
+    });
+
+    const project = await api()
+      .post("/api/v1/projects")
+      .set(authHeader(owner.accessToken))
+      .send({ info: "Transfer edge project" });
+    const projectId = project.body.project.id as string;
+
+    await api()
+      .post(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(owner.accessToken))
+      .send({ email: "mema@example.com" });
+    await api()
+      .post(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(owner.accessToken))
+      .send({ email: "memb@example.com" });
+
+    const members = await api()
+      .get(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(owner.accessToken));
+
+    const id1 = members.body.members.find(
+      (m: { email: string }) => m.email === "mema@example.com",
+    ).id;
+    const id2 = members.body.members.find(
+      (m: { email: string }) => m.email === "memb@example.com",
+    ).id;
+
+    const first = await api()
+      .post(`/api/v1/projects/${projectId}/transfer-ownership`)
+      .set(authHeader(owner.accessToken))
+      .send({ newOwnerMemberId: id1 });
+
+    expect(first.status).toBe(200);
+
+    const second = await api()
+      .post(`/api/v1/projects/${projectId}/transfer-ownership`)
+      .set(authHeader(owner.accessToken))
+      .send({ newOwnerMemberId: id2 });
+
+    expect(second.status).toBe(403);
+
+    const after = await api()
+      .get(`/api/v1/projects/${projectId}/members`)
+      .set(authHeader(m1.accessToken));
+
+    expect(after.status).toBe(200);
+
+    const owners = (
+      after.body.members as Array<{ id: string; role: string; status: string }>
+    ).filter((m) => m.role === "OWNER" && m.status === "ACTIVE");
+
+    expect(owners).toHaveLength(1);
+    expect(owners[0]!.id).toBe(id1);
+  });
 });

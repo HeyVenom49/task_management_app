@@ -37,7 +37,7 @@ services:
        NODE_ENV: production
        DATABASE_URL: postgres://postgres:postgres@postgres:5432/task_management
        REDIS_URL: redis://redis:6379
-       JWT_SECRET: change-me-to-a-long-random-secret
+       JWT_SECRET: ${JWT_SECRET}
        JWT_EXPIRES_IN: 15m
        REFRESH_EXPIRES_IN: 7d
        FRONTEND_URL: http://localhost:3000

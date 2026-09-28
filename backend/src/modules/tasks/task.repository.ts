@@ -131,8 +131,11 @@ export class TaskRepository {
     return result.length > 0;
   }
 
-  public async countOpenAssignedTo(memberId: string): Promise<number> {
-    const [row] = await this.sql`
+  public async countOpenAssignedTo(
+    memberId: string,
+    db: Db = this.sql,
+  ): Promise<number> {
+    const [row] = await db`
       SELECT COUNT(*)::int AS count
       FROM tasks
       WHERE assignee_member_id = ${memberId}

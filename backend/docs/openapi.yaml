@@ -691,6 +691,9 @@ paths:
     delete:
       tags: [Projects]
       summary: Delete project (OWNER only)
+      description: >
+        Fails with 409 while the project still has members (or other related rows)
+        that block deletion via foreign keys.
       responses:
         "200":
           description: Deleted
@@ -700,6 +703,12 @@ paths:
                 $ref: "#/components/schemas/Message"
         "403":
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: Project has members or related data
           content:
             application/json:
               schema:
@@ -773,6 +782,9 @@ paths:
     delete:
       tags: [Members]
       summary: Soft-remove member (OWNER only)
+      description: >
+        Sets status to INACTIVE. Blocked if the target is the last active OWNER,
+        or if they are assigned to any non-COMPLETED task.
       responses:
         "200":
           description: Removed
@@ -781,7 +793,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Message"
         "400":
-          description: Cannot remove last owner / not found
+          description: Cannot remove the last owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: Member is assigned to open tasks
           content:
             application/json:
               schema:
@@ -794,9 +818,12 @@ paths:
     post:
       tags: [Members]
       summary: Reactivate member (platform ADMIN only)
+      description: >
+        Restores status to ACTIVE with role MEMBER always.
+        A previous OWNER role is not restored; use transfer-ownership if needed.
       responses:
         "200":
-          description: Reactivated
+          description: Reactivated as MEMBER
           content:
             application/json:
               schema:
@@ -806,6 +833,12 @@ paths:
                     $ref: "#/components/schemas/Membership"
         "403":
           description: Not a platform admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Project or member not found
           content:
             application/json:
               schema:
@@ -853,8 +886,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Target member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
         "409":
-          description: Target already owner
+          description: Target already owner / unique owner conflict
           content:
             application/json:
               schema:
@@ -927,14 +966,14 @@ paths:
                 properties:
                   task:
                     $ref: "#/components/schemas/Task"
-        "400":
-          description: Task not found in project
+        "403":
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
-        "403":
-          description: Forbidden
+        "404":
+          description: Task not found in project
           content:
             application/json:
               schema:
@@ -963,13 +1002,19 @@ paths:
                   task:
                     $ref: "#/components/schemas/Task"
         "400":
-          description: Not found / invalid assignee
+          description: Invalid assignee
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
         "403":
           description: Not allowed to update these fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Task not found
           content:
             application/json:
               schema:
@@ -986,6 +1031,12 @@ paths:
                 $ref: "#/components/schemas/Message"
         "403":
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Task not found
           content:
             application/json:
               schema:

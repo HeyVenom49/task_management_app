@@ -104,8 +104,11 @@ export class MemberRepository {
     return rows.map((row) => this.mapWithUser(row as MemberWithUserRow));
   }
 
-  public async countActiveOwners(projectId: string): Promise<number> {
-    const [row] = await this.sql`
+  public async countActiveOwners(
+    projectId: string,
+    db: Db = this.sql,
+  ): Promise<number> {
+    const [row] = await db`
         SELECT COUNT(*)::int AS count
         FROM members
         WHERE project_id = ${projectId}
