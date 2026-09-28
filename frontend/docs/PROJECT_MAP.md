@@ -1,7 +1,8 @@
 # Project Map
 
 > Source of truth for frontend implementation. Verified against `backend/src` on 2026-09-24;
-> re-verified for the projects/members/tasks slice on 2026-09-26.
+> re-verified for the projects/members/tasks slice on 2026-09-26; dual-theme (dark mode) added
+> 2026-09-28 (frontend-only, no backend changes).
 > Priority when sources conflict: actual backend source code > this document > inference.
 
 ## 1. Product Understanding
@@ -205,8 +206,13 @@ components/
     ├── ConfirmDialog                   shared modal — delete project, delete task, remove member
     ├── Tabs                            tab-nav primitive — Tasks/Members/Settings (ProjectPage)
     ├── StatusPill                      task status badge (TaskRow, TaskDrawer)
-    └── PriorityPill                    task priority badge (TaskRow, TaskDrawer)
+    ├── PriorityPill                    task priority badge (TaskRow, TaskDrawer)
+    └── ThemeToggle                     light/dark toggle icon-button (AppShell topbar)
 ```
+
+`theme/ThemeContext.tsx` (`ThemeProvider`/`useTheme`) and `utils/contrast.ts`
+(`contrastRatio` — WCAG relative-luminance contrast, used only by its own test suite to guard
+every theme token pairing) added 2026-09-28; see §12's Theming note.
 
 Feature-specific components (`ProjectRow`, `TaskRow`, `TaskDrawer`, `MemberRow`) stay flat in
 `components/` rather than nested under a `features/` tree — matches the existing (small) scale of
@@ -278,12 +284,32 @@ Superhuman tight type — via `frontend/design-md/` + taste skill.
 - **Stack:** React Router, CSS modules + tokens (no Tailwind), `apiFetch` + Auth Context,
   shared `useForm`. Access token in memory only.
 - **Testing:** `bun test` + `@testing-library/react` (happy-dom).
+- **Theming (added 2026-09-28):** a dark theme now exists alongside the light "Warm Desk" theme
+  above, togglable via `ThemeToggle` in `AppShell`'s topbar. Defaults to the visitor's OS
+  preference (`prefers-color-scheme`) on first visit, then persists the explicit choice to
+  `localStorage` (`docket-theme`). Mechanism: a `data-theme="dark"` attribute on `<html>`
+  (`src/theme/ThemeContext.tsx`), with CSS custom-property overrides in `tokens.css`'s
+  `:root[data-theme="dark"]` block — every component already consumed `var(--*)` tokens, so no
+  component CSS needed to change, only the token values. A small inline script in `index.html`
+  applies the stored/system theme before React mounts, to avoid a flash of the wrong theme on
+  reload. Dark values keep the light theme's own teal accent and Outfit/JetBrains Mono typography
+  (not a re-skin) — only the canvas/surface/border/text palette gets a near-black, Linear-inspired
+  counterpart. Every theme-dependent token pairing is covered by an automated WCAG AA contrast
+  test (`src/utils/contrast.ts` + `.test.ts`), not just eyeballed.
 
 ## 13. Design Decisions
 
 - Accent is **signal teal** (from-scratch 2026-09-26 overhaul), not stamp-ink oxblood.
 - Design-md brands are reference vocabulary only — no copied palettes, proprietary fonts, or layouts.
-- No dark mode in v1 (deferred).
+- **Dark mode added 2026-09-28** (supersedes the earlier "deferred" decision below): dark is a
+  full alternative theme, not a partial/sidebar-only treatment — see §12's Theming note. The
+  existing light theme's palette, typography, and layout are unchanged; only new dark-mode token
+  values and a toggle were added.
+- The light theme's `--text-muted` value had a real WCAG AA contrast failure against
+  `--surface-inset` (2.14:1, measured while building the dark-theme contrast test suite; AA
+  requires 4.5:1 for normal text). Fixed 2026-09-28 by darkening `--text-muted` from `#a8a29e` to
+  `#6b655d` (now 4.88:1) — a one-token color correction, not a redesign. Recorded here so it isn't
+  rediscovered as a mystery later.
 - `register` does not auto-login (backend returns only `{ user }`, no tokens) — UI must route
   to a "check your email" screen, not straight into the app.
 - `refresh` returns only a new access token, not the user — app-boot flow is
@@ -304,8 +330,11 @@ Superhuman tight type — via `frontend/design-md/` + taste skill.
 [x] Tasks workflow (create, view, edit, reassign, restatus, delete — creator/owner-gated delete)
 [x] Members workflow — invite/list/remove implemented and verified; reactivate intentionally
     NOT built (no frontend-reachable id — GET /:id/members never returns INACTIVE members, see §15)
+[x] Dual-theme (dark mode) — toggle, system-preference default, persisted choice, no-flash
+    on reload, hardcoded-color audit, automated WCAG contrast suite (2026-09-28)
 [ ] Responsive refinement (not separately audited in this pass)
-[ ] Accessibility audit (not separately audited in this pass)
+[ ] Accessibility audit (not separately audited in this pass; note ConfirmDialog/TaskDrawer's
+    modal-keyboard gap in §17 — unchanged by the theming work)
 ```
 
 ## 15. Known Backend Limitations
@@ -421,3 +450,39 @@ Superhuman tight type — via `frontend/design-md/` + taste skill.
   instance, Postgres database, or credentials were reachable in this environment, the same gap
   the auth feature's entry above already recorded. This still needs to be run by hand against a
   real backend before the projects/members/tasks feature is considered fully verified end-to-end.
+- **2026-09-28 — Dual-theme (dark mode) implementation complete (Tasks 1–8 of the
+  `2026-09-28-dual-theme` plan).** Added a dark theme alongside the existing light "Warm Desk"
+  theme: `:root[data-theme="dark"]` token overrides in `tokens.css` (§12); `ThemeContext`
+  (`ThemeProvider`/`useTheme`, mirrors the existing `AuthContext` pattern) with system-preference
+  default and `localStorage` persistence; a `ThemeToggle` icon-button wired into `AppShell`'s
+  topbar; an inline `index.html` script applying the stored/system theme before React mounts, to
+  avoid a flash; a codebase-wide hardcoded-color audit (10 stylesheet files) that either tied a
+  literal to its already-matching semantic token via `color-mix()` (self-healing a few
+  pre-existing mismatches left over from before the app was re-themed — e.g. `StatusPill`'s and
+  `PriorityPill`'s backgrounds didn't match any current token) or marked it theme-invariant with a
+  one-line comment (overlay scrims, depth-shadow hairlines, and the `AuthLayout` branded gradient
+  panel, none of which were in scope to redesign); and a permanent automated WCAG AA contrast test
+  suite (`src/utils/contrast.ts`) covering every theme-dependent token pairing in both themes. Also
+  fixed a real pre-existing accessibility bug in the light theme (see §13's `--text-muted` note).
+  All work verified via this plan's (Task 8) final integration pass:
+    - `bun test` — 151 pass / 0 fail across 39 files (244 `expect()` calls). Pre-existing `act()`
+      warnings are informational, not failures — not introduced by this work.
+    - `bun run build` (`tsc -b && vite build`) — zero errors.
+    - `bun run lint` (`eslint .`) — zero errors.
+    - `grep -rn "TODO\|FIXME" src` — no matches.
+    - Hardcoded-color sweep (`grep` for literal colors outside `var(--*)`) re-run after fixes —
+      every remaining hit is either a token definition in `tokens.css` itself or has a
+      theme-invariant comment directly above it.
+  Plan: `docs/superpowers/plans/2026-09-28-dual-theme.md`; task briefs/reports live under
+  `.superpowers/sdd/2026-09-28-dual-theme/`.
+  Spec: `docs/superpowers/specs/2026-09-28-dual-theme-design.md`.
+  **Pending:** this plan's Step 2 called for a manual browser walkthrough of both themes across
+  every screen (Dashboard, Tasks/Members/Settings tabs, TaskDrawer, Security settings, the auth
+  screens, plus a hard-reload no-flash check). In this environment only a partial, programmatic
+  version was possible: the dev server was started and confirmed to boot and serve HTTP 200; the
+  served HTML was confirmed to contain the no-flash inline script in the correct position; the
+  served `tokens.css` was confirmed to contain both the light and dark token blocks with the
+  expected values. An actual visual/interactive walkthrough in a real browser — seeing the
+  rendered colors, clicking the toggle, exercising every screen, and confirming the hard-reload
+  no-flash behavior with human eyes — was **not** performed and still needs to be done by hand
+  before this feature is considered fully verified end-to-end.
