@@ -1,8 +1,9 @@
 .overlay {
   position: fixed;
   inset: 0;
-  /* fixed overlay scrim, intentionally theme-invariant */
-  background: rgba(28, 25, 23, 0.36);
+  /* fixed overlay scrim, intentionally theme-invariant — pure black so it's guaranteed darker
+     than either theme's canvas (a near-black base can render lighter than a dark canvas) */
+  background: rgba(0, 0, 0, 0.36);
   display: flex;
   align-items: center;
   justify-content: center;

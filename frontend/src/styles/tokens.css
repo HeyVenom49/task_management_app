@@ -1,5 +1,6 @@
 :root {
   /* Docket Warm Desk — soft paper + deep teal signal */
+  color-scheme: light;
   --bg: #f3f1ec;
   --bg-accent: #e8e4db;
   --bg-glow: rgba(15, 118, 110, 0.07);
@@ -19,7 +20,7 @@
   --accent-contrast: #ffffff;
 
   --success: #3f6212;
-  --warning: #b45309;
+  --warning: #92450a;
   --danger: #b91c1c;
   --info: #1d4ed8;
 
@@ -62,6 +63,7 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #171310;
   --bg-accent: #1f1a14;
   --bg-glow: rgba(45, 212, 191, 0.08);
@@ -73,7 +75,7 @@
   --border-strong: #3d352a;
   --text-primary: #f5f1e8;
   --text-secondary: #b8ad9c;
-  --text-muted: #8a7e6f;
+  --text-muted: #9a8d7c;
 
   --accent: #2dd4bf;
   --accent-hover: #5eead4;

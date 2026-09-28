@@ -13,8 +13,12 @@ const STORAGE_KEY = "docket-theme";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getInitialTheme(): Theme {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // localStorage may be unavailable (privacy mode, blocked storage) — fall through to system preference.
+  }
   if (typeof window.matchMedia !== "function") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
@@ -24,13 +28,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
-      setTheme: setThemeState,
+      setTheme(next: Theme) {
+        setThemeState(next);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, next);
+        } catch {
+          // Persistence is best-effort; the in-memory theme still applies for this session.
+        }
+      },
     }),
     [theme],
   );

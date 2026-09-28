@@ -13,7 +13,11 @@ function channelLuminance(channel: number): number {
     : Math.pow((normalized + 0.055) / 1.055, 2.4);
 }
 
-function relativeLuminance(hex: string): number {
+function toHex(channel: number): string {
+  return Math.round(channel).toString(16).padStart(2, "0");
+}
+
+export function relativeLuminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex);
   return (
     0.2126 * channelLuminance(r) +
@@ -29,4 +33,18 @@ export function contrastRatio(hexA: string, hexB: string): number {
   const lighter = Math.max(luminanceA, luminanceB);
   const darker = Math.min(luminanceA, luminanceB);
   return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * Alpha-composites fgHex over bgHex (simple per-channel sRGB blend), returning the resulting hex.
+ * Mirrors what `color-mix(in srgb, fgHex N%, transparent)` renders over bgHex, and what a fixed
+ * `rgba()` overlay renders over a given canvas color — the composition our components actually use.
+ */
+export function compositeOver(fgHex: string, alpha: number, bgHex: string): string {
+  const [fr, fg, fb] = hexToRgb(fgHex);
+  const [br, bg, bb] = hexToRgb(bgHex);
+  const r = alpha * fr + (1 - alpha) * br;
+  const g = alpha * fg + (1 - alpha) * bg;
+  const b = alpha * fb + (1 - alpha) * bb;
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }

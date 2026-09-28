@@ -7,7 +7,12 @@
     <title>Docket</title>
     <script>
       (function () {
-        var stored = localStorage.getItem("docket-theme");
+        var stored = null;
+        try {
+          stored = localStorage.getItem("docket-theme");
+        } catch (e) {
+          // localStorage may be unavailable (privacy mode, blocked storage) — fall through to system preference.
+        }
         var theme =
           stored === "light" || stored === "dark"
             ? stored
