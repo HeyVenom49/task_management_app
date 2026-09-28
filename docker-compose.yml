@@ -34,7 +34,7 @@ services:
       - "4000:4000"
     environment:
        PORT: 4000
-       NODE_ENV: production
+       NODE_ENV: development
        DATABASE_URL: postgres://postgres:postgres@postgres:5432/task_management
        REDIS_URL: redis://redis:6379
        JWT_SECRET: ${JWT_SECRET}

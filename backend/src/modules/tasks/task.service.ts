@@ -223,19 +223,21 @@ export class TaskService {
   }
 
   public async remove(userId: string, projectId: string, taskId: string) {
-    const membership = await this.requireActiveMember(userId, projectId);
+    await this.sql.begin(async (tx) => {
+      const membership = await this.requireActiveMember(userId, projectId);
 
-    const existing = await this.taskRepo.findById(taskId);
-    if (!existing || existing.projectId !== projectId) {
-      throw new NotFoundError("Task not found");
-    }
-    const isOwner = membership.role === "OWNER";
-    const isCreator = existing.creatorMemberId === membership.id;
-    if (!isOwner && !isCreator) {
-      throw new ForbiddenError(
-        "Only the creator or an owner can delete this task",
-      );
-    }
-    await this.taskRepo.delete(taskId);
+      const existing = await this.taskRepo.findById(taskId);
+      if (!existing || existing.projectId !== projectId) {
+        throw new NotFoundError("Task not found");
+      }
+      const isOwner = membership.role === "OWNER";
+      const isCreator = existing.creatorMemberId === membership.id;
+      if (!isOwner && !isCreator) {
+        throw new ForbiddenError(
+          "Only the creator or an owner can delete this task",
+        );
+      }
+      await this.taskRepo.delete(taskId);
+    });
   }
 }

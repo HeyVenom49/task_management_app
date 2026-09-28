@@ -65,8 +65,9 @@ export class ProjectRepository {
   public async update(
     id: string,
     input: UpdateProjectInput,
+    db: Db = this.sql,
   ): Promise<Project | null> {
-    const [row] = await this.sql`
+    const [row] = await db`
         UPDATE projects
         SET info = ${input.info}, updated_at = NOW()
         WHERE id = ${id}
@@ -75,8 +76,8 @@ export class ProjectRepository {
     return row ? this.map(row as ProjectRow) : null;
   }
 
-  public async delete(id: string): Promise<boolean> {
-    const result = await this.sql`
+  public async delete(id: string, db: Db = this.sql): Promise<boolean> {
+    const result = await db`
         DELETE FROM projects
         WHERE id = ${id}
         RETURNING id

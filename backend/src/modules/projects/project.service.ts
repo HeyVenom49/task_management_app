@@ -1,4 +1,4 @@
-import type { Sql } from "postgres";
+import type { Sql, TransactionSql } from "postgres";
 import type { ProjectRepository } from "./project.repository";
 import {
   BadRequestError,
@@ -10,6 +10,7 @@ import type { MemberRepository } from "./member.repository";
 import type { AuthRepository } from "../auth/auth.repository";
 import type { TaskRepository } from "../tasks/task.repository";
 
+type Db = Sql | TransactionSql;
 export class ProjectServices {
   constructor(
     private readonly sql: Sql,
@@ -63,6 +64,30 @@ export class ProjectServices {
     );
   }
 
+  private async requireOwnerLocked(userId: string, projectId: string, db: Db) {
+    const membership = await this.memberRepo.lockByUserAndProject(
+      userId,
+      projectId,
+      db,
+    );
+
+    if (
+      !membership ||
+      membership.status !== "ACTIVE" ||
+      membership.role !== "OWNER"
+    ) {
+      throw new ForbiddenError("You do not have access to this project");
+    }
+
+    const project = await this.repo.findById(projectId);
+
+    if (!project) {
+      throw new ForbiddenError("You do not have access to this project");
+    }
+
+    return { project, membership };
+  }
+
   public async create(userId: string, info: string) {
     try {
       return await this.sql.begin(async (tx) => {
@@ -96,10 +121,12 @@ export class ProjectServices {
   }
 
   public async update(userId: string, projectId: string, info: string) {
-    await this.requireOwner(userId, projectId);
     try {
-      const project = await this.repo.update(projectId, { info });
-      return { project };
+      return await this.sql.begin(async (tx) => {
+        await this.requireOwnerLocked(userId, projectId, tx);
+        const project = await this.repo.update(projectId, { info }, tx);
+        return { project };
+      });
     } catch (err) {
       if (this.isUniqueViolation(err)) {
         throw new ConflictError("A project with this name already exists");
@@ -109,9 +136,11 @@ export class ProjectServices {
   }
 
   public async remove(userId: string, projectId: string) {
-    await this.requireOwner(userId, projectId);
     try {
-      await this.repo.delete(projectId);
+      return await this.sql.begin(async (tx) => {
+        await this.requireOwnerLocked(userId, projectId, tx);
+        await this.repo.delete(projectId, tx);
+      });
     } catch (err) {
       if (
         typeof err === "object" &&
@@ -161,12 +190,18 @@ export class ProjectServices {
     }
 
     try {
-      const member = await this.memberRepo.create({
-        userId: user.id,
-        projectId,
-        role: "MEMBER",
+      return await this.sql.begin(async (tx) => {
+        await this.requireOwnerLocked(userId, projectId, tx);
+        const member = await this.memberRepo.create(
+          {
+            userId: user.id,
+            projectId,
+            role: "MEMBER",
+          },
+          tx,
+        );
+        return { member };
       });
-      return { member };
     } catch (err) {
       if (this.isUniqueViolation(err)) {
         throw new ConflictError("User is already a member");
@@ -248,6 +283,13 @@ export class ProjectServices {
     }
     if (target.status === "ACTIVE") {
       throw new ConflictError("Member is already active");
+    }
+
+    const targetUser = await this.authRepo.findById(target.userId);
+    if (!targetUser || targetUser.status !== "ACTIVE") {
+      throw new ConflictError(
+        "Cannot reactivate membership for an inactive or unverified user",
+      );
     }
 
     const member = await this.memberRepo.reactivate(memberId, "MEMBER");

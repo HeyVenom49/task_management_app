@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import env from "../../config/env";
+import { parseDurationToMs } from "./duration";
 
 const COOKIE_NAME = "refreshToken";
 
@@ -9,7 +10,7 @@ export function setRefreshCookie(res: Response, rawRefresh: string) {
     secure: env.cookieSecure,
     sameSite: "lax",
     path: "/api/v1/auth",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: parseDurationToMs(env.refreshExpiresIn),
   });
 }
 

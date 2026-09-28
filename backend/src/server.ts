@@ -2,7 +2,8 @@ import "dotenv/config";
 import { app } from "./app";
 import http from "node:http";
 import env from "./config/env";
-import { connectRedis } from "./shared/redis/redis";
+import { connectRedis, disconnectRedis } from "./shared/redis/redis";
+import sql from "./db/client";
 
 const PORT = env.port;
 
@@ -18,7 +19,25 @@ async function start() {
   });
 }
 
+async function shutdown(signal: string) {
+  console.log(`${signal} received, shutting down...`);
+  await new Promise<void>((resolve, reject) => {
+    server.close((err) => (err ? reject(err) : resolve()));
+  });
+  await disconnectRedis();
+  await sql.end({ timeout: 5 });
+  process.exit(0);
+}
+
 start().catch((err) => {
   console.error("Failed to start server: ", err);
   process.exit(1);
+});
+
+process.on("SIGTERM", () => {
+  void shutdown("SIGTERM");
+});
+
+process.on("SIGINT", () => {
+  void shutdown("SIGINT");
 });

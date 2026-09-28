@@ -129,8 +129,8 @@ export class TaskRepository {
     return row ? this.map(row as TaskRow) : null;
   }
 
-  public async delete(taskId: string): Promise<boolean> {
-    const result = await this.sql`
+  public async delete(taskId: string, db: Db = this.sql): Promise<boolean> {
+    const result = await db`
         DELETE FROM tasks WHERE id = ${taskId} RETURNING id
     `;
     return result.length > 0;

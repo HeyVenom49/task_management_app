@@ -14,3 +14,9 @@ export async function connectRedis(): Promise<void> {
     await redis.connect();
   }
 }
+
+export async function disconnectRedis(): Promise<void> {
+  if (redis.isOpen) {
+    await redis.quit();
+  }
+}

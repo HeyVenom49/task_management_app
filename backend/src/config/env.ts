@@ -15,6 +15,10 @@ const envSchema = z.object({
 
 const parsed = envSchema.parse(process.env);
 
+if (parsed.NODE_ENV === "production" && !parsed.COOKIE_SECURE) {
+  throw new Error("COOKIE_SECURE must be true when NODE_ENV=production");
+}
+
 const env = {
   port: parsed.PORT,
   nodeEnv: parsed.NODE_ENV,
