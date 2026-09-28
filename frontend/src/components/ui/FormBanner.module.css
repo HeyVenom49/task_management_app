@@ -7,21 +7,21 @@
 }
 
 .error {
-  background: rgba(185, 28, 28, 0.08);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
   color: var(--danger);
-  border: 1px solid rgba(185, 28, 28, 0.18);
+  border: 1px solid color-mix(in srgb, var(--danger) 18%, transparent);
 }
 
 .success {
-  background: rgba(63, 98, 18, 0.08);
+  background: color-mix(in srgb, var(--success) 8%, transparent);
   color: var(--success);
-  border: 1px solid rgba(63, 98, 18, 0.18);
+  border: 1px solid color-mix(in srgb, var(--success) 18%, transparent);
 }
 
 .info {
-  background: rgba(29, 78, 216, 0.08);
+  background: color-mix(in srgb, var(--info) 8%, transparent);
   color: var(--info);
-  border: 1px solid rgba(29, 78, 216, 0.18);
+  border: 1px solid color-mix(in srgb, var(--info) 18%, transparent);
 }
 
 @keyframes reveal {

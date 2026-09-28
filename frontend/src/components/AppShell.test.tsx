@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, mock, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
+import { ThemeProvider } from "../theme/ThemeContext";
 
 // Capture a COPY of the real module's exports BEFORE mock.module replaces
 // it, so it can be restored afterwards. mock.module() replaces the module
@@ -29,11 +30,13 @@ const { AppShell } = await import("./AppShell");
 describe("AppShell", () => {
   test("the wordmark links back to the dashboard", () => {
     render(
-      <MemoryRouter>
-        <AppShell>
-          <p>content</p>
-        </AppShell>
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter>
+          <AppShell>
+            <p>content</p>
+          </AppShell>
+        </MemoryRouter>
+      </ThemeProvider>,
     );
     expect(screen.getByRole("link", { name: "docket" })).toHaveAttribute("href", "/");
   });

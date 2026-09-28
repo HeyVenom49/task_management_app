@@ -1,6 +1,7 @@
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
+import { ThemeProvider } from "../theme/ThemeContext";
 import type { Member, Project } from "../types/project";
 
 const realAuthContext = { ...(await import("../auth/AuthContext")) };
@@ -31,9 +32,11 @@ const { DashboardPage } = await import("./DashboardPage");
 
 function renderDashboard() {
   return render(
-    <MemoryRouter>
-      <DashboardPage />
-    </MemoryRouter>,
+    <ThemeProvider>
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>
+    </ThemeProvider>,
   );
 }
 

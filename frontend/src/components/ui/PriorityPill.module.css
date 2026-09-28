@@ -10,22 +10,22 @@
 }
 
 .VERY_LOW {
-  background: rgba(138, 138, 144, 0.08);
+  background: color-mix(in srgb, var(--text-muted) 8%, transparent);
   color: var(--text-muted);
 }
 
 .LOW {
-  background: rgba(138, 138, 144, 0.16);
+  background: color-mix(in srgb, var(--text-secondary) 16%, transparent);
   color: var(--text-secondary);
 }
 
 .MODERATE {
-  background: rgba(180, 83, 9, 0.12);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
   color: var(--warning);
 }
 
 .HIGH {
-  background: rgba(220, 38, 38, 0.12);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
   color: var(--danger);
 }
 
