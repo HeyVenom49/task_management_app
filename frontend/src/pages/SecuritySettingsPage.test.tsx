@@ -1,6 +1,7 @@
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import { ThemeProvider } from "../theme/ThemeContext";
 
 const realAuthContext = { ...(await import("../auth/AuthContext")) };
 const clearSessionMock = mock(() => {});
@@ -44,12 +45,14 @@ describe("SecuritySettingsPage", () => {
     ) as unknown as typeof fetch;
 
     render(
-      <MemoryRouter initialEntries={["/settings/security"]}>
-        <Routes>
-          <Route path="/settings/security" element={<SecuritySettingsPage />} />
-          <Route path="/login" element={<p>login page</p>} />
-        </Routes>
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter initialEntries={["/settings/security"]}>
+          <Routes>
+            <Route path="/settings/security" element={<SecuritySettingsPage />} />
+            <Route path="/login" element={<p>login page</p>} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
     );
 
     fireEvent.change(screen.getByLabelText("Current password"), { target: { value: "old-password" } });
@@ -72,12 +75,14 @@ describe("SecuritySettingsPage", () => {
     }
 
     render(
-      <MemoryRouter initialEntries={["/settings/security"]}>
-        <Routes>
-          <Route path="/settings/security" element={<SecuritySettingsPage />} />
-          <Route path="/login" element={<LoginStateProbe />} />
-        </Routes>
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter initialEntries={["/settings/security"]}>
+          <Routes>
+            <Route path="/settings/security" element={<SecuritySettingsPage />} />
+            <Route path="/login" element={<LoginStateProbe />} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
     );
 
     fireEvent.change(screen.getByLabelText("Current password"), { target: { value: "old-password" } });
@@ -93,9 +98,11 @@ describe("SecuritySettingsPage", () => {
     globalThis.fetch = mock(async () => jsonResponse(401, { message: "Invalid credentials" })) as unknown as typeof fetch;
 
     render(
-      <MemoryRouter initialEntries={["/settings/security"]}>
-        <SecuritySettingsPage />
-      </MemoryRouter>,
+      <ThemeProvider>
+        <MemoryRouter initialEntries={["/settings/security"]}>
+          <SecuritySettingsPage />
+        </MemoryRouter>
+      </ThemeProvider>,
     );
 
     fireEvent.change(screen.getByLabelText("Current password"), { target: { value: "wrong" } });

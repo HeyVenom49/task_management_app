@@ -1,6 +1,7 @@
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
+import { ThemeProvider } from "../theme/ThemeContext";
 import { ApiError } from "../api/client";
 import type { MemberWithUser, Project } from "../types/project";
 
@@ -29,13 +30,15 @@ const { ProjectPage } = await import("./ProjectPage");
 
 function renderProjectPage() {
   return render(
-    <MemoryRouter initialEntries={["/projects/p1/tasks"]}>
-      <Routes>
-        <Route path="/projects/:id" element={<ProjectPage />}>
-          <Route path="tasks" element={<p>tasks tab content</p>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <ThemeProvider>
+      <MemoryRouter initialEntries={["/projects/p1/tasks"]}>
+        <Routes>
+          <Route path="/projects/:id" element={<ProjectPage />}>
+            <Route path="tasks" element={<p>tasks tab content</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </ThemeProvider>,
   );
 }
 
