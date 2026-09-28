@@ -4,10 +4,11 @@ import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
+  NotFoundError,
 } from "../../shared/errors";
 import type { MemberRepository } from "./member.repository";
 import type { AuthRepository } from "../auth/auth.repository";
-import { addAbortListener } from "events";
+import type { TaskRepository } from "../tasks/task.repository";
 
 export class ProjectServices {
   constructor(
@@ -15,6 +16,7 @@ export class ProjectServices {
     private readonly repo: ProjectRepository,
     private readonly memberRepo: MemberRepository,
     private readonly authRepo: AuthRepository,
+    private readonly taskRepo: TaskRepository,
   ) {}
 
   private async requireActiveMember(userId: string, projectId: string) {
@@ -99,7 +101,21 @@ export class ProjectServices {
 
   public async remove(userId: string, projectId: string) {
     await this.requireOwner(userId, projectId);
-    await this.repo.delete(projectId);
+    try {
+      await this.repo.delete(projectId);
+    } catch (err) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        (err as { code: string }).code === "23503"
+      ) {
+        throw new ConflictError(
+          "Project cannot be deleted while it has members or related data",
+        );
+      }
+      throw err;
+    }
   }
 
   public async listMember(userId: string, projectId: string) {
@@ -164,7 +180,7 @@ export class ProjectServices {
       target.projectId !== projectId ||
       target.status !== "ACTIVE"
     ) {
-      throw new BadRequestError("Member not found");
+      throw new NotFoundError("Member not found");
     }
 
     if (target.role === "OWNER") {
@@ -172,6 +188,14 @@ export class ProjectServices {
       if (owners <= 1) {
         throw new BadRequestError("Cannot remove the last owner");
       }
+    }
+
+    const open = await this.taskRepo.countOpenAssignedTo(memberId);
+
+    if (open > 0) {
+      throw new ConflictError(
+        "Cannot remove a member who is assigned to open tasks",
+      );
     }
 
     await this.memberRepo.deactivate(memberId);
@@ -189,12 +213,12 @@ export class ProjectServices {
 
     const project = await this.repo.findById(projectId);
     if (!project) {
-      throw new BadRequestError("Project not found");
+      throw new NotFoundError("Project not found");
     }
 
     const target = await this.memberRepo.findById(memberId);
     if (!target || target.projectId !== projectId) {
-      throw new BadRequestError("Member not found");
+      throw new NotFoundError("Member not found");
     }
     if (target.status === "ACTIVE") {
       throw new ConflictError("Member is already active");
@@ -227,7 +251,7 @@ export class ProjectServices {
       target.projectId !== projectId ||
       target.status !== "ACTIVE"
     ) {
-      throw new BadRequestError("Member not found");
+      throw new NotFoundError("Member not found");
     }
 
     // optional but clear:
@@ -236,19 +260,42 @@ export class ProjectServices {
     }
 
     return await this.sql.begin(async (tx) => {
-      const newOwner = await this.memberRepo.updateRole(target.id, "OWNER", tx);
+      await tx`
+        SELECT id FROM members
+        WHERE id = ${actorMembership.id} AND status = 'ACTIVE'
+        FOR UPDATE
+      `;
 
-      const previousOwner = await this.memberRepo.updateRole(
-        actorMembership.id,
-        "MEMBER",
-        tx,
-      );
-
-      if (!newOwner || !previousOwner) {
-        throw new BadRequestError("Could not transfer ownership");
+      const [locked] = await tx`
+        SELECT role FROM members WHERE id = ${actorMembership.id}
+      `;
+      if (locked?.role !== "OWNER") {
+        throw new ForbiddenError("You do not have access to this project");
       }
+      try {
+        const previousOwner = await this.memberRepo.updateRole(
+          actorMembership.id,
+          "MEMBER",
+          tx,
+        );
 
-      return { previousOwner, newOwner };
+        const newOwner = await this.memberRepo.updateRole(
+          target.id,
+          "OWNER",
+          tx,
+        );
+
+        if (!newOwner || !previousOwner) {
+          throw new BadRequestError("Could not transfer ownership");
+        }
+
+        return { previousOwner, newOwner };
+      } catch (err) {
+        if (this.isUniqueViolation(err)) {
+          throw new ConflictError("Project already has an owner");
+        }
+        throw err;
+      }
     });
   }
 }

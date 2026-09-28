@@ -267,7 +267,7 @@ export class ProjectController {
       const result = await this.service.transferOwnership(
         req.user.id,
         params.data.id,
-        params.data.id,
+        parsed.data.newOwnerMemberId,
       );
       res.status(200).json(result);
     } catch (err) {

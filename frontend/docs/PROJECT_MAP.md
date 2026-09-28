@@ -94,7 +94,7 @@ Base path: `/api/v1/projects/:id/tasks` — every route requires `authenticate`.
 | POST   | `/`          | `{ title(1-200), description?(≤500\|null), priority, status?, assigneeMemberId?\|null }` | 201 `{ task }`     | any ACTIVE member; `status` defaults `NOT_STARTED`; `assigneeMemberId` must be an ACTIVE member of the same project |
 | GET    | `/`          | —                                                                                          | 200 `{ tasks }`    | any ACTIVE member; all tasks in the project, no server-side filtering/pagination |
 | GET    | `/:taskId`   | —                                                                                          | 200 `{ task }`     | any ACTIVE member |
-| PATCH  | `/:taskId`   | any subset of the create fields                                                           | 200 `{ task }`     | any ACTIVE member (not creator-restricted) |
+| PATCH  | `/:taskId`   | any subset of the create fields                                                           | 200 `{ task }`     | OWNER/creator: any fields; assignee: `status` only (mixed fields → 403); other members → 403 |
 | DELETE | `/:taskId`   | —                                                                                          | 200 `{ message }`  | only the task's creator or a project OWNER |
 
 `priority`: `VERY_LOW\|LOW\|MODERATE\|HIGH\|URGENT`. `status`: `NOT_STARTED\|IN_PROGRESS\|BLOCKED\|COMPLETED`.
@@ -127,14 +127,15 @@ Verified against `backend/src/modules/projects/project.service.ts` and
   *only* route gated on it is `POST /:id/members/:memberId/reactivate`
   (`project.service.ts:185`, `actor.role !== "ADMIN"` → 403) — and that endpoint has no
   frontend-reachable id to call it with (see §15), so in practice this gate is backend-only today.
-- Task actions: create/edit/change-status/change-assignee are open to any ACTIVE project member
-  (not role-gated). Delete is restricted to the task's creator or the project OWNER
-  (`task.service.ts`).
+- Task create: any ACTIVE member. Task update (`assertCanUpdateTask`): project OWNER or task
+  creator → all fields; assignee → `status` only (extra fields → 403 entire request); other
+  active members → 403. Delete: creator or OWNER (`task.service.ts`).
 - Any authenticated user who is not an ACTIVE member of a given project gets 403 from every
   project/task endpoint for that project — the frontend treats this identically to "not found"
   (design spec §7, `ProjectPage`'s not-found state), never revealing that the project exists.
-- Frontend permission checks (hiding Settings tab / invite / remove / delete-task) are UX
-  affordances only — the backend service layer remains authoritative, per CLAUDE.md §13.
+- Frontend permission checks (Settings tab / invite / remove / delete-task / TaskDrawer field
+  enablement + PATCH body shape via `utils/taskPermissions.ts`) are UX affordances only — the
+  backend service layer remains authoritative, per CLAUDE.md §13.
 
 ## 7. User Journeys (backend-supported today)
 
@@ -152,10 +153,11 @@ Invited member → logs in → sees project on their own dashboard (GET /project
   their memberships) → opens it
 Project (any ACTIVE member) → Tasks tab → "New task" → TaskDrawer (create mode) → assign to
   a member → POST /:id/tasks
-Any ACTIVE member → opens a task row → TaskDrawer (edit mode) → change status/assignee/priority
-  → PATCH /:id/tasks/:taskId
-Task's creator or project OWNER → delete task (ConfirmDialog) → DELETE /:id/tasks/:taskId
-  (a non-creator, non-owner member never sees the delete action — §6)
+OWNER/creator → TaskDrawer full edit → PATCH all fields
+Assignee (non-owner/creator) → TaskDrawer status-only → PATCH `{ status }` only
+Other member → TaskDrawer read-only (no Save)
+Task's creator or project OWNER → delete task → DELETE /:id/tasks/:taskId
+  (non-creator, non-owner never sees Delete — §6)
 Project OWNER → Settings tab → edit info (PATCH /:id) or delete project (DELETE /:id,
   ConfirmDialog) → redirected to dashboard on delete
 Project OWNER → Members tab → remove member (DELETE /:id/members/:memberId) → member
@@ -249,7 +251,8 @@ Invite member             → POST   /api/v1/projects/:id/members             �
 Remove member              → DELETE /api/v1/projects/:id/members/:memberId  → OWNER only, soft-deactivate
 Task list                  → GET    /api/v1/projects/:id/tasks               → any ACTIVE member
 Create task                 → POST   /api/v1/projects/:id/tasks               → any ACTIVE member
-Edit/reassign/restatus task  → PATCH  /api/v1/projects/:id/tasks/:taskId       → any ACTIVE member
+Edit task (full)             → PATCH  /api/v1/projects/:id/tasks/:taskId       → OWNER or creator
+Restatus task                → PATCH  /api/v1/projects/:id/tasks/:taskId       → assignee (`status` only)
 Delete task                  → DELETE /api/v1/projects/:id/tasks/:taskId       → creator or OWNER only
 ```
 

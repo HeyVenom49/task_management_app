@@ -130,4 +130,15 @@ export class TaskRepository {
     `;
     return result.length > 0;
   }
+
+  public async countOpenAssignedTo(memberId: string): Promise<number> {
+    const [row] = await this.sql`
+      SELECT COUNT(*)::int AS count
+      FROM tasks
+      WHERE assignee_member_id = ${memberId}
+        AND status <> 'COMPLETED'
+    `;
+
+    return row?.count ?? 0;
+  }
 }

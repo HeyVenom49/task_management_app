@@ -1,6 +1,10 @@
 import type { TaskRepository } from "./task.repository";
 import type { MemberRepository } from "../projects/member.repository";
-import { BadRequestError, ForbiddenError } from "../../shared/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../../shared/errors";
 import type { CreateTaskInput, UpdateTaskInput } from "./task.types";
 
 export class TaskService {
@@ -116,7 +120,7 @@ export class TaskService {
     await this.requireActiveMember(userId, projectId);
     const task = await this.taskRepo.findById(taskId);
     if (!task || task.projectId !== projectId) {
-      throw new BadRequestError("Task not found");
+      throw new NotFoundError("Task not found");
     }
     return { task };
   }
@@ -131,7 +135,7 @@ export class TaskService {
 
     const existing = await this.taskRepo.findById(taskId);
     if (!existing || existing.projectId !== projectId) {
-      throw new BadRequestError("Task not found");
+      throw new NotFoundError("Task not found");
     }
 
     this.assertCanUpdateTask(membership, existing, input);
@@ -149,7 +153,7 @@ export class TaskService {
 
     const existing = await this.taskRepo.findById(taskId);
     if (!existing || existing.projectId !== projectId) {
-      throw new BadRequestError("Task not found");
+      throw new NotFoundError("Task not found");
     }
     const isOwner = membership.role === "OWNER";
     const isCreator = existing.creatorMemberId === membership.id;

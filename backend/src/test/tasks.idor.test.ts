@@ -47,13 +47,13 @@ describe("task/project IDOR", () => {
       .get(`/api/v1/projects/${projectA.id}/tasks/${bobTaskId}`)
       .set(authHeader(alice.accessToken));
 
-    expect(getRes.status).toBe(400);
+    expect(getRes.status).toBe(404);
 
     const patchRes = await api()
       .patch(`/api/v1/projects/${projectA.id}/tasks/${bobTaskId}`)
       .set(authHeader(alice.accessToken))
       .send({ title: "Hacked" });
 
-    expect(patchRes.status).toBe(400);
+    expect(patchRes.status).toBe(404);
   });
 });

@@ -6,11 +6,13 @@ import { ProjectServices } from "./project.service";
 import { ProjectController } from "./project.controller";
 import { MemberRepository } from "./member.repository";
 import { AuthRepository } from "../auth/auth.repository";
+import { TaskRepository } from "../tasks/task.repository";
 
 const repo = new ProjectRepository(sql);
 const memberRepo = new MemberRepository(sql);
 const authRepo = new AuthRepository(sql);
-const service = new ProjectServices(sql, repo, memberRepo, authRepo);
+const taskRepo = new TaskRepository(sql);
+const service = new ProjectServices(sql, repo, memberRepo, authRepo, taskRepo);
 const controller = new ProjectController(service);
 
 const projectRouter = Router();

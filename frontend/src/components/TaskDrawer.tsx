@@ -8,6 +8,11 @@ import { ApiError } from "../api/client";
 import { createTask, deleteTask, updateTask } from "../api/tasks";
 import type { MemberRole, MemberWithUser } from "../types/project";
 import type { CreateTaskInput, Task, TaskPriority, TaskStatus } from "../types/task";
+import {
+  buildTaskUpdateInput,
+  canDeleteTask,
+  getTaskEditMode,
+} from "../utils/taskPermissions";
 import styles from "./TaskDrawer.module.css";
 
 type TaskDrawerProps = {
@@ -45,6 +50,13 @@ export function TaskDrawer({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const isCreate = task === null;
+  const editMode = task ? getTaskEditMode(task, ownMembershipId, ownRole) : "full";
+  const canEditFull = isCreate || editMode === "full";
+  const canEditStatus = isCreate || editMode === "full" || editMode === "status";
+  const canSave = isCreate || editMode !== "none";
+  const canDelete = task !== null && canDeleteTask(task, ownMembershipId, ownRole);
+
   const { values, errors, formError, isSubmitting, handleChange, handleBlur, handleSubmit } =
     useForm<TaskFormValues>({
       initialValues: {
@@ -55,15 +67,28 @@ export function TaskDrawer({
         assigneeMemberId: task?.assigneeMemberId ?? "",
       },
       validators: {
-        title: (value) =>
-          value.trim().length === 0
+        title: (value) => {
+          if (!canEditFull) return undefined;
+          return value.trim().length === 0
             ? "Title is required"
             : value.length > 200
               ? "Title must be 200 characters or fewer"
-              : undefined,
-        description: (value) => (value.length > 500 ? "Description must be 500 characters or fewer" : undefined),
+              : undefined;
+        },
+        description: (value) =>
+          canEditFull && value.length > 500
+            ? "Description must be 500 characters or fewer"
+            : undefined,
       },
       async onSubmit(formValues) {
+        if (task) {
+          const input = buildTaskUpdateInput(editMode, formValues);
+          if (!input) return;
+          const result = await updateTask(projectId, task.id, input);
+          onUpdated(result.task);
+          return;
+        }
+
         const input: CreateTaskInput = {
           title: formValues.title.trim(),
           description: formValues.description.trim() === "" ? null : formValues.description.trim(),
@@ -71,13 +96,8 @@ export function TaskDrawer({
           status: formValues.status as TaskStatus,
           assigneeMemberId: formValues.assigneeMemberId === "" ? null : formValues.assigneeMemberId,
         };
-        if (task) {
-          const result = await updateTask(projectId, task.id, input);
-          onUpdated(result.task);
-        } else {
-          const result = await createTask(projectId, input);
-          onCreated(result.task);
-        }
+        const result = await createTask(projectId, input);
+        onCreated(result.task);
       },
     });
 
@@ -94,7 +114,13 @@ export function TaskDrawer({
     }
   }
 
-  const canDelete = task !== null && (ownRole === "OWNER" || task.creatorMemberId === ownMembershipId);
+  const subheading = isCreate
+    ? "Name it, set priority, assign someone."
+    : editMode === "status"
+      ? "You can update the status on this task."
+      : editMode === "none"
+        ? "You can view this task, but you cannot edit it."
+        : "Update the details, then save.";
 
   return (
     <div className={styles.overlay} role="presentation" onClick={onClose}>
@@ -110,9 +136,7 @@ export function TaskDrawer({
             <h2 id={titleId} className={styles.heading}>
               {task ? "Edit task" : "New task"}
             </h2>
-            <p className={styles.subheading}>
-              {task ? "Update the details, then save." : "Name it, set priority, assign someone."}
-            </p>
+            <p className={styles.subheading}>{subheading}</p>
           </div>
           <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
             ×
@@ -126,6 +150,7 @@ export function TaskDrawer({
               label="Title"
               value={values.title}
               error={errors.title}
+              disabled={!canEditFull}
               onChange={(event) => handleChange("title", event.target.value)}
               onBlur={() => handleBlur("title")}
             />
@@ -133,6 +158,7 @@ export function TaskDrawer({
               label="Description"
               value={values.description}
               error={errors.description}
+              disabled={!canEditFull}
               onChange={(event) => handleChange("description", event.target.value)}
               onBlur={() => handleBlur("description")}
             />
@@ -147,6 +173,7 @@ export function TaskDrawer({
                     id="task-priority"
                     className={styles.select}
                     value={values.priority}
+                    disabled={!canEditFull}
                     onChange={(event) => handleChange("priority", event.target.value)}
                   >
                     <option value="VERY_LOW">Very low</option>
@@ -164,6 +191,7 @@ export function TaskDrawer({
                     id="task-status"
                     className={styles.select}
                     value={values.status}
+                    disabled={!canEditStatus}
                     onChange={(event) => handleChange("status", event.target.value)}
                   >
                     <option value="NOT_STARTED">Not started</option>
@@ -181,6 +209,7 @@ export function TaskDrawer({
                   id="task-assignee"
                   className={styles.select}
                   value={values.assigneeMemberId}
+                  disabled={!canEditFull}
                   onChange={(event) => handleChange("assigneeMemberId", event.target.value)}
                 >
                   <option value="">Unassigned</option>
@@ -210,15 +239,17 @@ export function TaskDrawer({
               Delete
             </Button>
           )}
-          <Button
-            type="submit"
-            form="task-drawer-form"
-            variant="primary"
-            isLoading={isSubmitting}
-            disabled={isDeleting}
-          >
-            {task ? "Save changes" : "Create task"}
-          </Button>
+          {canSave && (
+            <Button
+              type="submit"
+              form="task-drawer-form"
+              variant="primary"
+              isLoading={isSubmitting}
+              disabled={isDeleting}
+            >
+              {task ? "Save changes" : "Create task"}
+            </Button>
+          )}
         </div>
       </aside>
     </div>

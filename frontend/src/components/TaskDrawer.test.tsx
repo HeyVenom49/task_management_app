@@ -123,4 +123,59 @@ describe("TaskDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(() => expect(screen.getByText("Invalid assignee")).toBeInTheDocument());
   });
+
+  test("assignee can only change status and PATCH sends status only", async () => {
+    const assigned: Task = {
+      ...existingTask,
+      creatorMemberId: "m1",
+      assigneeMemberId: "m2",
+    };
+    updateTaskMock.mockImplementation(async () => ({ task: { ...assigned, status: "IN_PROGRESS" } }));
+
+    render(
+      <TaskDrawer
+        projectId="p1"
+        members={members}
+        ownMembershipId="m2"
+        ownRole="MEMBER"
+        task={assigned}
+        onClose={() => {}}
+        onCreated={() => {}}
+        onUpdated={() => {}}
+        onDeleted={() => {}}
+      />,
+    );
+
+    expect(screen.getByLabelText("Title")).toBeDisabled();
+    expect(screen.getByLabelText("Priority")).toBeDisabled();
+    expect(screen.getByLabelText("Assignee")).toBeDisabled();
+    expect(screen.getByLabelText("Status")).not.toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "IN_PROGRESS" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(updateTaskMock).toHaveBeenCalledTimes(1));
+    expect(updateTaskMock).toHaveBeenCalledWith("p1", "t1", { status: "IN_PROGRESS" });
+  });
+
+  test("other member sees read-only edit with no Save", () => {
+    render(
+      <TaskDrawer
+        projectId="p1"
+        members={members}
+        ownMembershipId="m2"
+        ownRole="MEMBER"
+        task={existingTask}
+        onClose={() => {}}
+        onCreated={() => {}}
+        onUpdated={() => {}}
+        onDeleted={() => {}}
+      />,
+    );
+
+    expect(screen.getByLabelText("Title")).toBeDisabled();
+    expect(screen.getByLabelText("Status")).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+  });
 });

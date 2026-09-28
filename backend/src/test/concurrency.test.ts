@@ -108,7 +108,9 @@ describe("concurrency", () => {
       (m: { email: string }) => m.email === "m2@example.com",
     ).id;
 
-    await Promise.all([
+    const ownerMemberId = project.body.membership.id as string;
+
+    const [t1, t2] = await Promise.all([
       api()
         .post(`/api/v1/projects/${projectId}/transfer-ownership`)
         .set(authHeader(owner.accessToken))
@@ -119,15 +121,30 @@ describe("concurrency", () => {
         .send({ newOwnerMemberId: id2 }),
     ]);
 
+    expect([t1.status, t2.status].includes(200)).toBe(true);
+
+    const winnerToken = t1.status === 200 ? m1.accessToken : m2.accessToken;
+
     const after = await api()
       .get(`/api/v1/projects/${projectId}/members`)
-      .set(authHeader(m1.accessToken));
+      .set(authHeader(winnerToken));
 
-    const owners = (after.body.members ?? []).filter(
-      (m: { role: string; status: string }) =>
-        m.role === "OWNER" && m.status === "ACTIVE",
+    expect(after.status).toBe(200);
+
+    const list = after.body.members as Array<{
+      id: string;
+      role: string;
+      status: string;
+    }>;
+
+    const owners = list.filter(
+      (m) => m.role === "OWNER" && m.status === "ACTIVE",
     );
 
-    expect(owners.length === 1 || after.status === 403).toBe(true);
+    expect(owners).toHaveLength(1);
+    expect([id1, id2]).toContain(owners[0]!.id);
+
+    const oldOwner = list.find((m) => m.id === ownerMemberId);
+    expect(oldOwner?.role).toBe("MEMBER");
   });
 });
